@@ -30,9 +30,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
 .rchip{background:rgba(255,255,255,.07);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:9px 14px;border-radius:18px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit;-webkit-appearance:none;touch-action:manipulation}
 .rchip.on{background:#A32135;color:#fff;border-color:#A32135}
 .shutter{width:68px;height:68px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.22);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;touch-action:manipulation}
-.pcell{position:relative;border-radius:5px;overflow:hidden;cursor:pointer;margin-bottom:4px}
-.pbg{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:20px;background:#333}
-.pdel{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;background:rgba(163,33,53,.9);color:#fff;border:none;cursor:pointer;font-size:14px;font-weight:700;line-height:26px;text-align:center;-webkit-appearance:none;touch-action:manipulation}
 .step{display:flex;align-items:center;gap:12px;padding:10px 13px;border-radius:5px;background:rgba(255,255,255,.05);margin-bottom:8px}
 .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .dot.on{background:#A32135}.dot.off{background:rgba(255,255,255,.18)}
@@ -44,20 +41,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
 .co.bl{bottom:10px;left:10px;border-width:0 0 2px 2px}
 .co.br{bottom:10px;right:10px;border-width:0 2px 2px 0}
 </style>
-<!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<!-- All pages hidden by default via inline style -->
 <div id="p-auth" style="display:flex;flex-direction:column;background:#111312;min-height:100vh;align-items:center;justify-content:center;padding:40px 24px">
   <div style="width:100%;max-width:380px">
     <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#C04658;margin-bottom:8px">&#9654; A ChattRbox Collection</div>
     <div style="font-size:52px;font-weight:900;text-transform:uppercase;line-height:.9;color:#fff;margin-bottom:6px">Listing<br><b style="color:#A32135">Lens</b></div>
     <div style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:28px">Real estate photos &middot; by Studio12</div>
     <div style="display:flex;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:22px">
-      <button class="tab on" id="tl" onclick="swTab(0)" style="touch-action:manipulation;cursor:pointer">Sign In</button>
-      <button class="tab" id="tu" onclick="swTab(1)" style="touch-action:manipulation;cursor:pointer">Sign Up</button>
+      <button class="tab on" id="tl" onclick="swTab(0)">Sign In</button>
+      <button class="tab" id="tu" onclick="swTab(1)">Sign Up</button>
     </div>
     <div id="f-in">
       <label class="lbl">Email</label>
@@ -67,10 +62,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
       <button class="btn-r" onclick="goD()">Sign In &rarr;</button>
     </div>
     <div id="f-up" style="display:none">
-      <label class="lbl">Full Name</label><input class="inp" type="text" id="su-name" placeholder="Jane Smith">
-      <label class="lbl">Brokerage</label><input class="inp" type="text" id="su-brok" placeholder="Keller Williams">
-      <label class="lbl">Email</label><input class="inp" type="email" id="su-email" placeholder="agent@brokerage.com">
-      <label class="lbl">Password</label><input class="inp" type="password" id="su-pw" placeholder="Create password">
+      <label class="lbl">Full Name</label>
+      <input class="inp" type="text" id="su-name" placeholder="Jane Smith">
+      <label class="lbl">Brokerage</label>
+      <input class="inp" type="text" id="su-brok" placeholder="Keller Williams">
+      <label class="lbl">Email</label>
+      <input class="inp" type="email" id="su-email" placeholder="agent@brokerage.com">
+      <label class="lbl">Password</label>
+      <input class="inp" type="password" id="su-pw" placeholder="Create password">
       <button class="btn-r" onclick="doSignUp()">Create Account &rarr;</button>
     </div>
     <div id="auth-msg" style="font-size:12px;color:#C04658;text-align:center;margin-top:14px;min-height:18px"></div>
@@ -128,19 +127,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
 </div>
 
 <div id="p-cam" style="display:none;flex-direction:column;background:#000;position:fixed;inset:0;z-index:100;overflow:hidden">
-  <!-- Full screen camera viewport -->
   <video id="camvid" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;z-index:1"></video>
-  <!-- Placeholder when no camera -->
   <div id="camph" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,.4);text-align:center;padding:24px;z-index:2">
     <div style="font-size:48px;margin-bottom:12px">&#128247;</div>
     <div style="font-size:16px;font-weight:900;text-transform:uppercase;margin-bottom:8px">Camera Preview</div>
     <div style="font-size:12px;line-height:1.6;max-width:220px">Tap shutter to capture. Allow camera access when prompted.</div>
   </div>
-  <!-- Tap to focus indicator -->
-  <div id="focus-ring" style="display:none;position:absolute;width:64px;height:64px;border:2px solid #A32135;border-radius:50%;pointer-events:none;z-index:20;transform:translate(-50%,-50%);transition:opacity 400ms"></div>
-  <!-- Tap to focus touch area -->
+  <div id="focus-ring" style="display:none;position:absolute;width:64px;height:64px;border:2px solid #A32135;border-radius:50%;pointer-events:none;z-index:20;transform:translate(-50%,-50%)"></div>
   <div id="cam-touch" style="position:absolute;inset:0;z-index:5;cursor:crosshair" onclick="tapFocus(event)"></div>
-  <!-- Grid overlay -->
   <div style="position:absolute;inset:0;pointer-events:none;z-index:3">
     <div style="position:absolute;left:0;right:0;top:33%;border-top:1px solid rgba(255,255,255,.2)"></div>
     <div style="position:absolute;left:0;right:0;top:66%;border-top:1px solid rgba(255,255,255,.2)"></div>
@@ -148,42 +142,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
     <div style="position:absolute;top:0;bottom:0;left:66%;border-left:1px solid rgba(255,255,255,.2)"></div>
     <div class="co tl"></div><div class="co tr"></div><div class="co bl"></div><div class="co br"></div>
   </div>
-  <!-- Top HUD -->
   <div style="position:absolute;top:0;left:0;right:0;z-index:10;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(rgba(0,0,0,.6),transparent)">
     <button class="btn-sm" onclick="exitCam()">&larr;</button>
     <div id="crm" style="background:#A32135;color:#fff;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:3px">Living Room</div>
     <div id="cct" style="font-size:11px;color:rgba(255,255,255,.9);background:rgba(0,0,0,.5);padding:5px 10px;border-radius:3px;font-weight:700">0 / 30</div>
   </div>
-  <!-- Tip -->
-  <div style="position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:10;white-space:nowrap">
-    <div id="ctip" style="background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:6px 14px;font-size:11px;color:rgba(255,255,255,.9)">Stand in corner for widest angle</div>
+  <div style="position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:10">
+    <div id="ctip" style="background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:6px 14px;font-size:11px;color:rgba(255,255,255,.9);white-space:nowrap">Stand in corner for widest angle</div>
   </div>
-  <!-- Camera controls: zoom + exposure -->
-  <div style="position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:10px">
-    <!-- Zoom -->
+  <div style="position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:10;display:flex;flex-direction:column;gap:10px">
     <div style="background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:6px">
       <div style="font-size:8px;color:rgba(255,255,255,.5);letter-spacing:.1em;text-transform:uppercase">ZOOM</div>
-      <button onclick="adjZoom(0.5)" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center">+</button>
+      <button onclick="adjZoom(0.5)" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;touch-action:manipulation">+</button>
       <div id="zoom-val" style="font-size:10px;color:#fff;font-weight:700;min-width:28px;text-align:center">1.0x</div>
-      <button onclick="adjZoom(-0.5)" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center">−</button>
+      <button onclick="adjZoom(-0.5)" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;touch-action:manipulation">−</button>
     </div>
-    <!-- Exposure -->
     <div style="background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:6px">
       <div style="font-size:8px;color:rgba(255,255,255,.5);letter-spacing:.1em;text-transform:uppercase">EXP</div>
-      <button onclick="adjExp(1)" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;touch-action:manipulation">☀️</button>
+      <button onclick="adjExp(1)" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;touch-action:manipulation">+</button>
       <div id="exp-val" style="font-size:10px;color:#fff;font-weight:700;min-width:28px;text-align:center">0</div>
-      <button onclick="adjExp(-1)" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;touch-action:manipulation">🌑</button>
+      <button onclick="adjExp(-1)" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;touch-action:manipulation">−</button>
     </div>
   </div>
-  <!-- Room chips -->
   <div id="rbar" style="position:absolute;bottom:110px;left:0;right:0;z-index:10;padding:8px 12px;display:flex;gap:7px;overflow-x:auto;background:linear-gradient(transparent,rgba(0,0,0,.5))"></div>
-  <!-- Bottom controls -->
   <div style="position:absolute;bottom:0;left:0;right:0;z-index:10;padding:16px 20px 32px;background:linear-gradient(transparent,rgba(0,0,0,.8));display:flex;align-items:center;justify-content:space-between;gap:12px">
-    <!-- Thumbnail strip -->
     <div id="tstrip" style="display:flex;gap:5px;align-items:center;overflow-x:auto;flex:1;max-width:35%"><span style="font-size:9px;color:rgba(255,255,255,.3);white-space:nowrap">No photos</span></div>
-    <!-- Shutter -->
     <button class="shutter" onclick="snap()" style="flex-shrink:0"><div style="width:54px;height:54px;border-radius:50%;background:#fff;pointer-events:none"></div></button>
-    <!-- Right side buttons -->
     <div style="display:flex;flex-direction:column;gap:8px;align-items:center;max-width:35%">
       <button onclick="toggleOrient()" id="orient-btn" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:8px 10px;border-radius:6px;cursor:pointer;touch-action:manipulation;white-space:nowrap;width:100%">&#8645; Landscape</button>
       <button onclick="show('p-review')" style="background:#A32135;border:none;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:8px 10px;border-radius:6px;cursor:pointer;touch-action:manipulation;white-space:nowrap;width:100%">Review (<span id="csm">0</span>)</button>
@@ -199,16 +183,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
   </div>
   <div style="padding:18px">
     <div style="font-size:26px;font-weight:900;text-transform:uppercase;margin-bottom:4px">Review &amp; <b style="color:#A32135">Edit</b></div>
-    <div style="font-size:11px;color:#7c7e7b;margin-bottom:14px" id="rmeta">Tap photo to zoom &middot; tap x to delete</div>
-    <div id="pgrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
-      <div style="grid-column:1/-1;text-align:center;padding:32px;color:#a8a8a5;font-size:13px">No photos yet.</div>
-    </div>
+    <div style="font-size:11px;color:#7c7e7b;margin-bottom:14px">Tap photo to zoom &middot; tap x to delete</div>
+    <div id="pgrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
     <button class="btn-r" onclick="doSubmit()">Submit to Studio12 &rarr;</button>
     <button class="btn-out" onclick="show('p-cam')">&larr; Add More Photos</button>
   </div>
 </div>
 
-<!-- LIGHTBOX -->
 <div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:200;flex-direction:column;align-items:center;justify-content:center">
   <div style="position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:linear-gradient(rgba(0,0,0,.7),transparent)">
     <div id="lb-room" style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff">Room</div>
@@ -239,12 +220,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
 </div>
 
 <script>
-// ---- SUPABASE INIT ----
-var SUPA_URL = "https://oclulyqimtapjndravjm.supabase.co";
-var SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jbHVseXFpbXRhcGpuZHJhdmptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5ODU0MDQsImV4cCI6MjA5MjU2MTQwNH0.diKjiDYKgP_RInOzI7hgwJ0qNftKYtIdyRtzlNp6qYs";
-var supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-var currentUser = null;
-var currentSubmissionId = null;
+// SUPABASE
+var SUPA_URL="https://oclulyqimtapjndravjm.supabase.co";
+var SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jbHVseXFpbXRhcGpuZHJhdmptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5ODU0MDQsImV4cCI6MjA5MjU2MTQwNH0.diKjiDYKgP_RInOzI7hgwJ0qNftKYtIdyRtzlNp6qYs";
+var supa=supabase.createClient(SUPA_URL,SUPA_KEY);
+var currentUser=null;
+var currentSubmissionId=null;
+
+// ROOMS
+var rooms=[
   {n:"Living Room",t:"Stand in corner for widest angle",c:"#2a3a2d"},
   {n:"Kitchen",t:"Keep camera level with the top cabinets",c:"#3a2a28"},
   {n:"Primary Bed",t:"Stand in doorway for widest angle",c:"#2a2e3a"},
@@ -253,26 +237,12 @@ var currentSubmissionId = null;
   {n:"Exterior",t:"Center the house in the frame",c:"#2a3a35"},
   {n:"Backyard",t:"Show depth from corner",c:"#2a3838"}
 ];
+
 var pages=["p-auth","p-dash","p-setup","p-cam","p-review","p-done"];
 var cur=0,photos=[],stream=null,lbIdx=0;
+var orientLandscape=true,zoomLevel=1.0,expLevel=0;
 
-function goD(){show("p-dash");}
-
-function show(id){
-  pages.forEach(function(p){
-    var el=document.getElementById(p);
-    el.style.display="none";
-  });
-  var target=document.getElementById(id);
-  // flex pages
-  var flexPages=["p-auth","p-dash","p-setup","p-cam","p-review","p-done"];
-  target.style.display="flex";
-  target.style.flexDirection="column";
-  window.scrollTo(0,0);
-  if(id==="p-review") renderReview();
-  if(id==="p-cam" && !stream) tryCamera();
-}
-
+// AUTH
 function swTab(i){
   document.getElementById("f-in").style.display=i===0?"block":"none";
   document.getElementById("f-up").style.display=i===1?"block":"none";
@@ -281,115 +251,124 @@ function swTab(i){
   document.getElementById("auth-msg").textContent="";
 }
 
-var orientLandscape=true;
-var zoomLevel=1.0;
-var expLevel=0;
+function showMsg(m){document.getElementById("auth-msg").textContent=m;}
 
-function tapFocus(e){
-  var v=document.getElementById("camvid");
-  if(!stream||v.style.display==="none") return;
-  var rect=e.currentTarget.getBoundingClientRect();
-  var x=(e.clientX-rect.left)/rect.width;
-  var y=(e.clientY-rect.top)/rect.height;
-  // Show focus ring
-  var ring=document.getElementById("focus-ring");
-  ring.style.left=e.clientX+"px";
-  ring.style.top=e.clientY+"px";
-  ring.style.display="block";
-  ring.style.opacity="1";
-  ring.style.transform="translate(-50%,-50%) scale(1.3)";
-  ring.style.transition="transform 150ms, opacity 400ms";
-  setTimeout(function(){
-    ring.style.transform="translate(-50%,-50%) scale(1)";
-    ring.style.borderColor="#fff";
-  },150);
-  setTimeout(function(){ring.style.opacity="0";},800);
-  setTimeout(function(){ring.style.display="none";ring.style.borderColor="#A32135";},1200);
-  // Apply focus via ImageCapture if supported
-  var track=stream.getVideoTracks()[0];
-  if(!track) return;
-  var caps=track.getCapabilities?track.getCapabilities():{};
-  if(caps.focusMode && caps.focusMode.indexOf("manual")>-1){
-    track.applyConstraints({advanced:[{focusMode:"manual",pointsOfInterest:[{x:x,y:y}]}]}).catch(function(){});
-  } else if(caps.focusMode && caps.focusMode.indexOf("continuous")>-1){
-    track.applyConstraints({advanced:[{focusMode:"continuous",pointsOfInterest:[{x:x,y:y}]}]}).catch(function(){});
-  }
+async function goD(){
+  var email=document.getElementById("login-email").value.trim();
+  var pass=document.getElementById("login-pw").value;
+  if(!email||!pass){showMsg("Please enter your email and password.");return;}
+  showMsg("Signing in...");
+  var res=await supa.auth.signInWithPassword({email:email,password:pass});
+  if(res.error){showMsg(res.error.message);return;}
+  currentUser=res.data.user;
+  loadDash();
 }
 
-function adjZoom(delta){
-  zoomLevel=Math.min(5,Math.max(1,Math.round((zoomLevel+delta)*10)/10));
-  document.getElementById("zoom-val").textContent=zoomLevel.toFixed(1)+"x";
-  if(!stream) return;
-  var track=stream.getVideoTracks()[0];
-  if(!track) return;
-  var caps=track.getCapabilities?track.getCapabilities():{};
-  if(caps.zoom){
-    var min=caps.zoom.min||1;
-    var max=caps.zoom.max||5;
-    var z=Math.min(max,Math.max(min,zoomLevel));
-    track.applyConstraints({advanced:[{zoom:z}]}).catch(function(){});
-  }
+async function doSignUp(){
+  var name=document.getElementById("su-name").value.trim();
+  var brok=document.getElementById("su-brok").value.trim();
+  var email=document.getElementById("su-email").value.trim();
+  var pass=document.getElementById("su-pw").value;
+  if(!name||!email||!pass){showMsg("Please fill in all required fields.");return;}
+  showMsg("Creating account...");
+  var res=await supa.auth.signUp({email:email,password:pass});
+  if(res.error){showMsg(res.error.message);return;}
+  await supa.from("profiles").insert({id:res.data.user.id,full_name:name,brokerage:brok,email:email});
+  showMsg("Account created! Check your email to confirm, then sign in.");
 }
 
-function adjExp(delta){
-  expLevel=Math.min(3,Math.max(-3,expLevel+delta));
-  document.getElementById("exp-val").textContent=(expLevel>0?"+":"")+expLevel;
-  if(!stream) return;
-  var track=stream.getVideoTracks()[0];
-  if(!track) return;
-  var caps=track.getCapabilities?track.getCapabilities():{};
-  if(caps.exposureCompensation){
-    var step=caps.exposureCompensation.step||1;
-    var min=caps.exposureCompensation.min||(-3);
-    var max=caps.exposureCompensation.max||3;
-    var ev=Math.min(max,Math.max(min,expLevel*step));
-    track.applyConstraints({advanced:[{exposureCompensation:ev,exposureMode:"manual"}]}).catch(function(){});
-  }
+async function doSignOut(){
+  await supa.auth.signOut();
+  currentUser=null;
+  show("p-auth");
 }
 
-function startCam(){
-  currentSubmissionId = null;
-  buildChips();
-  saveSubmission(); // create record immediately
-  var cam=document.getElementById("p-cam");
+async function loadDash(){
+  var prof=await supa.from("profiles").select("*").eq("id",currentUser.id).single();
+  var name=prof.data?prof.data.full_name.split(" ")[0]:"Agent";
+  document.getElementById("dash-name").textContent="Good morning, "+name;
+  document.getElementById("dash-initial").textContent=name.charAt(0).toUpperCase();
+  var subs=await supa.from("submissions").select("*").eq("agent_id",currentUser.id).order("created_at",{ascending:false});
+  renderSubmissions(subs.data||[]);
+  show("p-dash");
+}
+
+function renderSubmissions(subs){
+  var stats={Submitted:0,Editing:0,Delivered:0};
+  subs.forEach(function(s){if(stats[s.status]!==undefined)stats[s.status]++;});
+  document.getElementById("stat-sub").textContent=stats["Submitted"];
+  document.getElementById("stat-ed").textContent=stats["Editing"];
+  document.getElementById("stat-del").textContent=stats["Delivered"];
+  var list=document.getElementById("sub-list");list.innerHTML="";
+  if(!subs.length){list.innerHTML='<div style="font-size:13px;color:#7c7e7b;padding:16px 0">No submissions yet. Tap Photograph New Listing to get started!</div>';return;}
+  subs.slice(0,8).forEach(function(s){
+    var d=new Date(s.created_at);
+    var ds=(d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear();
+    var bc=s.status==="Editing"?"be":s.status==="Delivered"?"bd":"bdr";
+    list.innerHTML+='<div class="lcard"><div style="width:44px;height:36px;border-radius:4px;background:#e5e5e3;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">&#127969;</div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:900;text-transform:uppercase;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+s.address+'</div><div style="font-size:11px;color:#7c7e7b;margin-top:2px">'+s.property_type+' &middot; '+s.photo_count+' photos &middot; '+ds+'</div></div><span class="badge '+bc+'">'+s.status+'</span></div>';
+  });
+}
+
+async function saveSubmission(){
+  if(!currentUser)return null;
+  var addr=document.getElementById("paddr").value||"Unknown Address";
+  var type=document.getElementById("ptype").value;
+  var notes=document.getElementById("pnotes").value;
+  var res=await supa.from("submissions").insert({agent_id:currentUser.id,address:addr,property_type:type,notes:notes,status:"Submitted",photo_count:0}).select().single();
+  if(res.data)currentSubmissionId=res.data.id;
+}
+
+async function doSubmit(){
+  if(!photos.length){alert("Please take at least 1 photo first.");return;}
+  if(currentSubmissionId){
+    await supa.from("submissions").update({photo_count:photos.length}).eq("id",currentSubmissionId);
+  }
+  show("p-done");
+}
+
+// NAVIGATION
+function show(id){
   pages.forEach(function(p){document.getElementById(p).style.display="none";});
+  var t=document.getElementById(id);
+  t.style.display="flex";
+  t.style.flexDirection="column";
+  window.scrollTo(0,0);
+  if(id==="p-review")renderReview();
+  if(id==="p-cam"&&!stream)tryCamera();
+}
+
+// CAMERA
+function startCam(){
+  currentSubmissionId=null;
+  buildChips();
+  saveSubmission();
+  pages.forEach(function(p){document.getElementById(p).style.display="none";});
+  var cam=document.getElementById("p-cam");
   cam.style.display="flex";
   cam.style.flexDirection="column";
-  if(!stream) tryCamera();
+  if(!stream)tryCamera();
 }
 
-function exitCam(){
-  show("p-dash");
+function exitCam(){show("p-dash");}
+
+function tryCamera(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
+  var c={video:{facingMode:{ideal:"environment"}}};
+  if(orientLandscape){c.video.width={ideal:1920};c.video.height={ideal:1080};}
+  else{c.video.width={ideal:1080};c.video.height={ideal:1920};}
+  navigator.mediaDevices.getUserMedia(c).then(function(s){
+    stream=s;
+    var v=document.getElementById("camvid");
+    v.srcObject=s;v.style.display="block";
+    document.getElementById("camph").style.display="none";
+  }).catch(function(){});
 }
 
 function toggleOrient(){
   orientLandscape=!orientLandscape;
-  var btn=document.getElementById("orient-btn");
-  btn.textContent=orientLandscape?"⇅ Landscape":"⇅ Portrait";
-  if(stream){
-    stream.getTracks().forEach(function(t){t.stop();});
-    stream=null;
-  }
+  document.getElementById("orient-btn").textContent=orientLandscape?"⇅ Landscape":"⇅ Portrait";
+  if(stream){stream.getTracks().forEach(function(t){t.stop();});stream=null;}
   tryCamera();
-}
-
-function tryCamera(){
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
-  var constraints={video:{facingMode:{ideal:"environment"}}};
-  if(orientLandscape){
-    constraints.video.width={ideal:1920};
-    constraints.video.height={ideal:1080};
-  } else {
-    constraints.video.width={ideal:1080};
-    constraints.video.height={ideal:1920};
-  }
-  navigator.mediaDevices.getUserMedia(constraints)
-    .then(function(s){
-      stream=s;
-      var v=document.getElementById("camvid");
-      v.srcObject=s;v.style.display="block";
-      document.getElementById("camph").style.display="none";
-    }).catch(function(){});
 }
 
 function buildChips(){
@@ -408,6 +387,51 @@ function selRoom(i){
   document.querySelectorAll(".rchip").forEach(function(c,j){c.classList.toggle("on",j===i);});
   document.getElementById("crm").textContent=rooms[i].n;
   document.getElementById("ctip").textContent=rooms[i].t;
+}
+
+function tapFocus(e){
+  var v=document.getElementById("camvid");
+  if(!stream||v.style.display==="none")return;
+  var rect=e.currentTarget.getBoundingClientRect();
+  var x=(e.clientX-rect.left)/rect.width;
+  var y=(e.clientY-rect.top)/rect.height;
+  var ring=document.getElementById("focus-ring");
+  ring.style.left=e.clientX+"px";ring.style.top=e.clientY+"px";
+  ring.style.display="block";ring.style.opacity="1";
+  ring.style.transform="translate(-50%,-50%) scale(1.3)";
+  setTimeout(function(){ring.style.transform="translate(-50%,-50%) scale(1)";ring.style.borderColor="#fff";},150);
+  setTimeout(function(){ring.style.opacity="0";},800);
+  setTimeout(function(){ring.style.display="none";ring.style.borderColor="#A32135";},1200);
+  var track=stream.getVideoTracks()[0];
+  if(!track)return;
+  var caps=track.getCapabilities?track.getCapabilities():{};
+  if(caps.focusMode){
+    track.applyConstraints({advanced:[{focusMode:"manual",pointsOfInterest:[{x:x,y:y}]}]}).catch(function(){});
+  }
+}
+
+function adjZoom(delta){
+  zoomLevel=Math.min(5,Math.max(1,Math.round((zoomLevel+delta)*10)/10));
+  document.getElementById("zoom-val").textContent=zoomLevel.toFixed(1)+"x";
+  if(!stream)return;
+  var track=stream.getVideoTracks()[0];
+  if(!track)return;
+  var caps=track.getCapabilities?track.getCapabilities():{};
+  if(caps.zoom){
+    track.applyConstraints({advanced:[{zoom:Math.min(caps.zoom.max||5,Math.max(caps.zoom.min||1,zoomLevel))}]}).catch(function(){});
+  }
+}
+
+function adjExp(delta){
+  expLevel=Math.min(3,Math.max(-3,expLevel+delta));
+  document.getElementById("exp-val").textContent=(expLevel>0?"+":"")+expLevel;
+  if(!stream)return;
+  var track=stream.getVideoTracks()[0];
+  if(!track)return;
+  var caps=track.getCapabilities?track.getCapabilities():{};
+  if(caps.exposureCompensation){
+    track.applyConstraints({advanced:[{exposureCompensation:expLevel,exposureMode:"manual"}]}).catch(function(){});
+  }
 }
 
 function snap(){
@@ -429,7 +453,7 @@ function updUI(){
   document.getElementById("csm").textContent=n;
   var s=document.getElementById("tstrip");s.innerHTML="";
   var sl=photos.slice(-6);
-  if(!sl.length){s.innerHTML='<span style="font-size:10px;color:rgba(255,255,255,.28)">No photos yet</span>';return;}
+  if(!sl.length){s.innerHTML='<span style="font-size:9px;color:rgba(255,255,255,.3);white-space:nowrap">No photos</span>';return;}
   sl.forEach(function(p){
     var d=document.createElement("div");
     d.style.cssText="width:44px;height:32px;border-radius:3px;flex-shrink:0;background:"+(p.du?"url("+p.du+") center/cover no-repeat":p.c);
@@ -491,18 +515,19 @@ function showLb(){
   document.getElementById("lb-count").textContent=(lbIdx+1)+" / "+photos.length;
 }
 
-function doSubmit(){
-  if(!photos.length){alert("Please take at least 1 photo first.");return;}
-  show("p-done");
-}
+function reset(){photos=[];cur=0;updUI();loadDash();}
 
-function reset(){photos=[];cur=0;updUI();show("p-dash");}
-
-// Hide all pages except auth on load
-window.onload=function(){
+// INIT
+window.onload=async function(){
   pages.forEach(function(p){document.getElementById(p).style.display="none";});
-  document.getElementById("p-auth").style.display="flex";
-  document.getElementById("p-auth").style.flexDirection="column";
+  var sess=await supa.auth.getSession();
+  if(sess.data.session){
+    currentUser=sess.data.session.user;
+    loadDash();
+  } else {
+    document.getElementById("p-auth").style.display="flex";
+    document.getElementById("p-auth").style.flexDirection="column";
+  }
 };
 </script>
 </body>
