@@ -470,16 +470,19 @@ function snap(){
     var needRot=isPort&&v.videoWidth>v.videoHeight;
     var c=document.createElement("canvas");
     if(needRot){
-      c.width=v.videoHeight;c.height=v.videoWidth;
+      c.width=v.videoHeight;
+      c.height=v.videoWidth;
       var cx=c.getContext("2d");
-      cx.translate(c.width/2,c.height/2);
+      cx.save();
+      cx.translate(c.width,0);
       cx.rotate(Math.PI/2);
-      cx.drawImage(v,-v.videoWidth/2,-v.videoHeight/2);
+      cx.drawImage(v,0,0,v.videoWidth,v.videoHeight);
+      cx.restore();
     } else {
       c.width=v.videoWidth;c.height=v.videoHeight;
       c.getContext("2d").drawImage(v,0,0);
     }
-    du=c.toDataURL("image/jpeg",0.85);
+    du=c.toDataURL("image/jpeg",1.0);
   }
   photos.push({id:Date.now(),room:rooms[cur].n,c:rooms[cur].c,du:du});
   updUI();flash();
