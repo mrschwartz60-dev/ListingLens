@@ -466,22 +466,10 @@ function snap(){
   playShutter();
   var v=document.getElementById("camvid"),du=null;
   if(v.style.display!=="none"&&v.readyState>=2){
-    var isPort=window.innerHeight>window.innerWidth;
-    var needRot=isPort&&v.videoWidth>v.videoHeight;
     var c=document.createElement("canvas");
-    if(needRot){
-      c.width=v.videoHeight;
-      c.height=v.videoWidth;
-      var cx=c.getContext("2d");
-      cx.save();
-      cx.translate(c.width,0);
-      cx.rotate(Math.PI/2);
-      cx.drawImage(v,0,0,v.videoWidth,v.videoHeight);
-      cx.restore();
-    } else {
-      c.width=v.videoWidth;c.height=v.videoHeight;
-      c.getContext("2d").drawImage(v,0,0);
-    }
+    c.width=v.videoWidth;
+    c.height=v.videoHeight;
+    c.getContext("2d").drawImage(v,0,0);
     du=c.toDataURL("image/jpeg",1.0);
   }
   photos.push({id:Date.now(),room:rooms[cur].n,c:rooms[cur].c,du:du});
