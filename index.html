@@ -465,9 +465,18 @@ function snap(){
   if(photos.length>=30){alert("Max 30 photos reached.");return;}
   var v=document.getElementById("camvid"),du=null;
   if(v.style.display!=="none"&&v.readyState>=2){
+    var isPort=window.innerHeight>window.innerWidth;
     var c=document.createElement("canvas");
-    c.width=v.videoWidth;c.height=v.videoHeight;
-    c.getContext("2d").drawImage(v,0,0);
+    if(isPort&&v.videoWidth>v.videoHeight){
+      c.width=v.videoHeight;c.height=v.videoWidth;
+      var cx=c.getContext("2d");
+      cx.translate(c.width/2,c.height/2);
+      cx.rotate(Math.PI/2);
+      cx.drawImage(v,-v.videoWidth/2,-v.videoHeight/2);
+    } else {
+      c.width=v.videoWidth;c.height=v.videoHeight;
+      c.getContext("2d").drawImage(v,0,0);
+    }
     du=c.toDataURL("image/jpeg",0.85);
   }
   photos.push({id:Date.now(),room:rooms[cur].n,c:rooms[cur].c,du:du});
