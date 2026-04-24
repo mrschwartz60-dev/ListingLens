@@ -17,7 +17,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
 .sp{flex:1}
 .lbl{display:block;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:6px;margin-top:14px}
 .inp{width:100%;padding:13px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:5px;color:#fff;font-size:15px;outline:none;-webkit-appearance:none;font-family:inherit}
-.tab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;color:rgba(255,255,255,.4);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:10px 16px 10px 0;cursor:pointer}
+.tab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;color:rgba(255,255,255,.4);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:14px 20px 14px 0;cursor:pointer;touch-action:manipulation;-webkit-appearance:none}
 .tab.on{color:#fff;border-bottom-color:#A32135}
 .flbl{display:block;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#5a5c59;margin-bottom:6px;margin-top:16px}
 .finp{width:100%;padding:13px 14px;background:#fff;border:1px solid #cfcfcc;border-radius:5px;font-size:15px;color:#111;outline:none;-webkit-appearance:none;font-family:inherit}
@@ -56,8 +56,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
     <div style="font-size:52px;font-weight:900;text-transform:uppercase;line-height:.9;color:#fff;margin-bottom:6px">Listing<br><b style="color:#A32135">Lens</b></div>
     <div style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:28px">Real estate photos &middot; by Studio12</div>
     <div style="display:flex;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:22px">
-      <button class="tab on" id="tl" onclick="swTab(0)">Sign In</button>
-      <button class="tab" id="tu" onclick="swTab(1)">Sign Up</button>
+      <button class="tab on" id="tl" onclick="swTab(0)" style="touch-action:manipulation;cursor:pointer">Sign In</button>
+      <button class="tab" id="tu" onclick="swTab(1)" style="touch-action:manipulation;cursor:pointer">Sign Up</button>
     </div>
     <div id="f-in">
       <label class="lbl">Email</label>
@@ -278,6 +278,7 @@ function swTab(i){
   document.getElementById("f-up").style.display=i===1?"block":"none";
   document.getElementById("tl").className="tab"+(i===0?" on":"");
   document.getElementById("tu").className="tab"+(i===1?" on":"");
+  document.getElementById("auth-msg").textContent="";
 }
 
 var orientLandscape=true;
