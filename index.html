@@ -127,38 +127,46 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
   </div>
 </div>
 
-<div id="p-cam" style="display:none;flex-direction:column;background:#000;min-height:100vh">
-  <div class="bar">
-    <button class="btn-sm" onclick="show('p-setup')">&larr; Setup</button>
-    <div class="sp" style="text-align:center;font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.15em">CAMERA MODE</div>
-    <button class="btn-sm" onclick="show('p-review')">Review (<span id="csm">0</span>)</button>
+<div id="p-cam" style="display:none;flex-direction:column;background:#000;position:fixed;inset:0;z-index:100;overflow:hidden">
+  <!-- Full screen camera viewport -->
+  <video id="camvid" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;z-index:1"></video>
+  <!-- Placeholder when no camera -->
+  <div id="camph" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,.4);text-align:center;padding:24px;z-index:2">
+    <div style="font-size:48px;margin-bottom:12px">&#128247;</div>
+    <div style="font-size:16px;font-weight:900;text-transform:uppercase;margin-bottom:8px">Camera Preview</div>
+    <div style="font-size:12px;line-height:1.6;max-width:220px">Tap shutter to capture. Allow camera access when prompted.</div>
   </div>
-  <div style="background:#1a1a1a;padding:8px 16px;font-size:11px;color:rgba(255,255,255,.5)">&#8635; Rotate phone landscape for best shots</div>
-  <div style="position:relative;width:100%;padding-bottom:56.25%;height:0;background:#000;overflow:hidden">
-    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center" id="cam-inner">
-      <video id="camvid" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:none;position:absolute;inset:0"></video>
-      <div id="camph" style="color:rgba(255,255,255,.35);text-align:center;padding:24px;position:relative;z-index:1">
-        <div style="font-size:36px;margin-bottom:10px">&#128247;</div>
-        <div style="font-size:14px;font-weight:900;text-transform:uppercase;margin-bottom:6px">Camera Preview</div>
-        <div style="font-size:11px;line-height:1.6;max-width:200px">Rotate landscape then tap shutter.</div>
-      </div>
-      <div style="position:absolute;inset:0;pointer-events:none;z-index:2">
-        <div style="position:absolute;left:0;right:0;top:33%;border-top:1px solid rgba(255,255,255,.18)"></div>
-        <div style="position:absolute;left:0;right:0;top:66%;border-top:1px solid rgba(255,255,255,.18)"></div>
-        <div style="position:absolute;top:0;bottom:0;left:33%;border-left:1px solid rgba(255,255,255,.18)"></div>
-        <div style="position:absolute;top:0;bottom:0;left:66%;border-left:1px solid rgba(255,255,255,.18)"></div>
-        <div class="co tl"></div><div class="co tr"></div><div class="co bl"></div><div class="co br"></div>
-        <div id="crm" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#A32135;color:#fff;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:3px;white-space:nowrap;z-index:3">Living Room</div>
-        <div id="cct" style="position:absolute;top:10px;right:10px;font-size:10px;color:rgba(255,255,255,.8);background:rgba(0,0,0,.65);padding:5px 9px;border-radius:3px;z-index:3">0 / 30</div>
-        <div id="ctip" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:7px 14px;font-size:11px;color:rgba(255,255,255,.9);white-space:nowrap;z-index:3;max-width:90%;text-align:center">Stand in corner for widest angle</div>
-      </div>
+  <!-- Grid overlay -->
+  <div style="position:absolute;inset:0;pointer-events:none;z-index:3">
+    <div style="position:absolute;left:0;right:0;top:33%;border-top:1px solid rgba(255,255,255,.2)"></div>
+    <div style="position:absolute;left:0;right:0;top:66%;border-top:1px solid rgba(255,255,255,.2)"></div>
+    <div style="position:absolute;top:0;bottom:0;left:33%;border-left:1px solid rgba(255,255,255,.2)"></div>
+    <div style="position:absolute;top:0;bottom:0;left:66%;border-left:1px solid rgba(255,255,255,.2)"></div>
+    <div class="co tl"></div><div class="co tr"></div><div class="co bl"></div><div class="co br"></div>
+  </div>
+  <!-- Top HUD -->
+  <div style="position:absolute;top:0;left:0;right:0;z-index:10;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(rgba(0,0,0,.6),transparent)">
+    <button class="btn-sm" onclick="exitCam()">&larr;</button>
+    <div id="crm" style="background:#A32135;color:#fff;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:3px">Living Room</div>
+    <div id="cct" style="font-size:11px;color:rgba(255,255,255,.9);background:rgba(0,0,0,.5);padding:5px 10px;border-radius:3px;font-weight:700">0 / 30</div>
+  </div>
+  <!-- Tip -->
+  <div style="position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:10;white-space:nowrap">
+    <div id="ctip" style="background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:6px 14px;font-size:11px;color:rgba(255,255,255,.9)">Stand in corner for widest angle</div>
+  </div>
+  <!-- Room chips -->
+  <div id="rbar" style="position:absolute;bottom:110px;left:0;right:0;z-index:10;padding:8px 12px;display:flex;gap:7px;overflow-x:auto;background:linear-gradient(transparent,rgba(0,0,0,.5))"></div>
+  <!-- Bottom controls -->
+  <div style="position:absolute;bottom:0;left:0;right:0;z-index:10;padding:16px 20px 32px;background:linear-gradient(transparent,rgba(0,0,0,.8));display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <!-- Thumbnail strip -->
+    <div id="tstrip" style="display:flex;gap:5px;align-items:center;overflow-x:auto;flex:1;max-width:35%"><span style="font-size:9px;color:rgba(255,255,255,.3);white-space:nowrap">No photos</span></div>
+    <!-- Shutter -->
+    <button class="shutter" onclick="snap()" style="flex-shrink:0"><div style="width:54px;height:54px;border-radius:50%;background:#fff;pointer-events:none"></div></button>
+    <!-- Right side buttons -->
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:center;max-width:35%">
+      <button onclick="toggleOrient()" id="orient-btn" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:8px 10px;border-radius:6px;cursor:pointer;touch-action:manipulation;white-space:nowrap;width:100%">&#8645; Landscape</button>
+      <button onclick="show('p-review')" style="background:#A32135;border:none;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:8px 10px;border-radius:6px;cursor:pointer;touch-action:manipulation;white-space:nowrap;width:100%">Review (<span id="csm">0</span>)</button>
     </div>
-  </div>
-  <div id="rbar" style="background:#0a0a0a;padding:10px 12px;display:flex;gap:7px;overflow-x:auto"></div>
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#000;gap:10px">
-    <div id="tstrip" style="display:flex;gap:5px;align-items:center;overflow-x:auto;flex:1"><span style="font-size:10px;color:rgba(255,255,255,.28)">No photos yet</span></div>
-    <button class="shutter" onclick="snap()"><div style="width:54px;height:54px;border-radius:50%;background:#fff;pointer-events:none"></div></button>
-    <button class="btn-sm" onclick="show('p-review')" style="white-space:nowrap">Review &rarr;</button>
   </div>
 </div>
 
@@ -248,14 +256,44 @@ function swTab(i){
   document.getElementById("tu").className="tab"+(i===1?" on":"");
 }
 
+var orientLandscape=true;
+
 function startCam(){
   buildChips();
-  show("p-cam");
+  // Use fixed positioning to take over full screen
+  var cam=document.getElementById("p-cam");
+  pages.forEach(function(p){document.getElementById(p).style.display="none";});
+  cam.style.display="flex";
+  cam.style.flexDirection="column";
+  if(!stream) tryCamera();
+}
+
+function exitCam(){
+  show("p-dash");
+}
+
+function toggleOrient(){
+  orientLandscape=!orientLandscape;
+  var btn=document.getElementById("orient-btn");
+  btn.textContent=orientLandscape?"⇅ Landscape":"⇅ Portrait";
+  if(stream){
+    stream.getTracks().forEach(function(t){t.stop();});
+    stream=null;
+  }
+  tryCamera();
 }
 
 function tryCamera(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
-  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},aspectRatio:{ideal:1.777}}})
+  var constraints={video:{facingMode:{ideal:"environment"}}};
+  if(orientLandscape){
+    constraints.video.width={ideal:1920};
+    constraints.video.height={ideal:1080};
+  } else {
+    constraints.video.width={ideal:1080};
+    constraints.video.height={ideal:1920};
+  }
+  navigator.mediaDevices.getUserMedia(constraints)
     .then(function(s){
       stream=s;
       var v=document.getElementById("camvid");
@@ -311,7 +349,7 @@ function updUI(){
 }
 
 function flash(){
-  var vp=document.getElementById("cam-inner");
+  var vp=document.getElementById("p-cam");
   var f=document.createElement("div");
   f.style.cssText="position:absolute;inset:0;background:#fff;opacity:.6;pointer-events:none;z-index:99;transition:opacity 180ms";
   vp.appendChild(f);
@@ -324,22 +362,28 @@ function renderReview(){
   var g=document.getElementById("pgrid");g.innerHTML="";
   if(!n){g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:32px;color:#a8a8a5;font-size:13px">No photos yet.</div>';return;}
   photos.forEach(function(p,i){
-    var cell=document.createElement("div");cell.className="pcell";
-    var bg=document.createElement("div");bg.className="pbg";
-    if(p.du)bg.style.cssText="position:absolute;inset:0;background:url("+p.du+") center/cover no-repeat";
-    else bg.style.background=p.c;
+    var cell=document.createElement("div");
+    cell.style.cssText="position:relative;border-radius:5px;overflow:hidden;cursor:pointer;margin-bottom:4px;aspect-ratio:16/9;background:"+p.c;
+    if(p.du){
+      var img=document.createElement("img");
+      img.src=p.du;
+      img.style.cssText="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block";
+      cell.appendChild(img);
+    }
     var num=document.createElement("div");
-    num.style.cssText="position:absolute;top:4px;left:5px;font-size:8px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.55);padding:2px 5px;border-radius:2px";
+    num.style.cssText="position:absolute;top:4px;left:5px;font-size:8px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.55);padding:2px 5px;border-radius:2px;z-index:2";
     num.textContent="#"+(i+1);
     var rm=document.createElement("div");
-    rm.style.cssText="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.7));padding:3px 5px;font-size:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.9)";
+    rm.style.cssText="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.7));padding:3px 5px;font-size:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.9);z-index:2";
     rm.textContent=p.room;
-    var del=document.createElement("button");del.className="pdel";del.textContent="x";
+    var del=document.createElement("button");
+    del.style.cssText="position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;background:rgba(163,33,53,.9);color:#fff;border:none;cursor:pointer;font-size:14px;font-weight:700;line-height:26px;text-align:center;z-index:3;touch-action:manipulation";
+    del.textContent="x";
     (function(idx){
       del.onclick=function(e){e.stopPropagation();photos.splice(idx,1);renderReview();updUI();};
       cell.onclick=function(){openLb(idx);};
     })(i);
-    cell.appendChild(bg);cell.appendChild(num);cell.appendChild(rm);cell.appendChild(del);
+    cell.appendChild(num);cell.appendChild(rm);cell.appendChild(del);
     g.appendChild(cell);
   });
 }
