@@ -438,12 +438,25 @@ function tapFocus(e){
 }
 
 function adjZoom(delta){
-  zoomLevel=Math.min(5,Math.max(1,Math.round((zoomLevel+delta)*10)/10));
+  zoomLevel=Math.round((zoomLevel+delta)*10)/10;
+  var minZ=0.5,maxZ=5;
+  if(stream){
+    var track=stream.getVideoTracks()[0];
+    if(track){
+      var caps=track.getCapabilities?track.getCapabilities():{};
+      if(caps.zoom){minZ=caps.zoom.min;maxZ=caps.zoom.max;}
+    }
+  }
+  zoomLevel=Math.min(maxZ,Math.max(minZ,zoomLevel));
   document.getElementById("zoom-val").textContent=zoomLevel.toFixed(1)+"x";
-  if(!stream)return;
-  var track=stream.getVideoTracks()[0];
-  if(!track)return;
-  var caps=track.getCapabilities?track.getCapabilities():{};
+  if(stream){
+    var track=stream.getVideoTracks()[0];
+    if(track){
+      var caps=track.getCapabilities?track.getCapabilities():{};
+      if(caps.zoom){track.applyConstraints({advanced:[{zoom:zoomLevel}]}).catch(function(){});}
+    }
+  }
+};
   if(caps.zoom){
     track.applyConstraints({advanced:[{zoom:Math.min(caps.zoom.max||5,Math.max(caps.zoom.min||1,zoomLevel))}]}).catch(function(){});
   }
@@ -463,18 +476,22 @@ function adjExp(delta){
 
 function snap(){
   if(photos.length>=30){alert("Max 30 photos reached.");return;}
+  playShutter();
   var v=document.getElementById("camvid"),du=null;
   if(v.style.display!=="none"&&v.readyState>=2){
     var isPort=window.innerHeight>window.innerWidth;
+    var needRot=isPort&&v.videoWidth>v.videoHeight;
     var c=document.createElement("canvas");
-    if(isPort&&v.videoWidth>v.videoHeight){
-      c.width=v.videoHeight;c.height=v.videoWidth;
+    if(needRot){
+      c.width=v.videoHeight;
+      c.height=v.videoWidth;
       var cx=c.getContext("2d");
       cx.translate(c.width/2,c.height/2);
       cx.rotate(Math.PI/2);
       cx.drawImage(v,-v.videoWidth/2,-v.videoHeight/2);
     } else {
-      c.width=v.videoWidth;c.height=v.videoHeight;
+      c.width=v.videoWidth;
+      c.height=v.videoHeight;
       c.getContext("2d").drawImage(v,0,0);
     }
     du=c.toDataURL("image/jpeg",0.85);
