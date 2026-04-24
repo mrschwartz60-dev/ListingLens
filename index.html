@@ -342,24 +342,9 @@ function startCam(){
 
 function exitCam(){show("p-dash");}
 
-window.addEventListener("orientationchange",function(){
-  setTimeout(function(){
-    if(stream){stream.getTracks().forEach(function(t){t.stop();});stream=null;}
-    if(document.getElementById("p-cam").style.display==="flex")tryCamera();
-  },400);
-});
-
-window.addEventListener("resize",function(){
-  if(document.getElementById("p-cam").style.display==="flex"){
-    if(stream){stream.getTracks().forEach(function(t){t.stop();});stream=null;}
-    tryCamera();
-  }
-});
-
 function tryCamera(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
-  var isLandscape=window.innerWidth>window.innerHeight;
-  var c={video:{facingMode:{ideal:"environment"},aspectRatio:{ideal:isLandscape?16/9:9/16}}};
+  var c={video:{facingMode:{ideal:"environment"},aspectRatio:{ideal:16/9},width:{ideal:1920},height:{ideal:1080}}};
   navigator.mediaDevices.getUserMedia(c).then(function(s){
     stream=s;
     var v=document.getElementById("camvid");
