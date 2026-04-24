@@ -44,6 +44,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
 .co.bl{bottom:10px;left:10px;border-width:0 0 2px 2px}
 .co.br{bottom:10px;right:10px;border-width:0 2px 2px 0}
 </style>
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -59,19 +61,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
     </div>
     <div id="f-in">
       <label class="lbl">Email</label>
-      <input class="inp" type="email" placeholder="agent@brokerage.com">
+      <input class="inp" type="email" id="login-email" placeholder="agent@brokerage.com">
       <label class="lbl">Password</label>
-      <input class="inp" type="password" placeholder="••••••••">
+      <input class="inp" type="password" id="login-pw" placeholder="••••••••">
       <button class="btn-r" onclick="goD()">Sign In &rarr;</button>
     </div>
     <div id="f-up" style="display:none">
-      <label class="lbl">Full Name</label><input class="inp" type="text" placeholder="Jane Smith">
-      <label class="lbl">Brokerage</label><input class="inp" type="text" placeholder="Keller Williams">
-      <label class="lbl">Email</label><input class="inp" type="email" placeholder="agent@brokerage.com">
-      <label class="lbl">Password</label><input class="inp" type="password" placeholder="Create password">
-      <button class="btn-r" onclick="goD()">Create Account &rarr;</button>
+      <label class="lbl">Full Name</label><input class="inp" type="text" id="su-name" placeholder="Jane Smith">
+      <label class="lbl">Brokerage</label><input class="inp" type="text" id="su-brok" placeholder="Keller Williams">
+      <label class="lbl">Email</label><input class="inp" type="email" id="su-email" placeholder="agent@brokerage.com">
+      <label class="lbl">Password</label><input class="inp" type="password" id="su-pw" placeholder="Create password">
+      <button class="btn-r" onclick="doSignUp()">Create Account &rarr;</button>
     </div>
-    <p style="font-size:11px;color:rgba(255,255,255,.28);text-align:center;margin-top:18px;line-height:1.6">Professional photo editing &middot; next-morning delivery.</p>
+    <div id="auth-msg" style="font-size:12px;color:#C04658;text-align:center;margin-top:14px;min-height:18px"></div>
+    <p style="font-size:11px;color:rgba(255,255,255,.28);text-align:center;margin-top:10px;line-height:1.6">Professional photo editing &middot; next-morning delivery.</p>
   </div>
 </div>
 
@@ -79,25 +82,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
   <div class="bar">
     <div><div class="logo">Listing<b>Lens</b></div><div style="font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.15em">BY STUDIO12</div></div>
     <div class="sp"></div>
-    <div style="width:32px;height:32px;border-radius:50%;background:#A32135;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700">JS</div>
-    <button class="btn-sm" onclick="show('p-auth')">Out</button>
+    <div id="dash-initial" style="width:32px;height:32px;border-radius:50%;background:#A32135;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700">?</div>
+    <button class="btn-sm" onclick="doSignOut()">Out</button>
   </div>
   <div style="background:#232524;color:#fff;padding:28px 20px 24px">
-    <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:6px">&#9654; Good morning, Agent</div>
+    <div id="dash-name" style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:6px">Good morning, Agent</div>
     <div style="font-size:34px;font-weight:900;text-transform:uppercase;line-height:.93;color:#fff;margin-bottom:20px">Your <b style="color:#A32135">Listings</b></div>
     <button class="btn-big" onclick="show('p-setup')">&#128247; Photograph New Listing</button>
   </div>
   <div style="padding:18px">
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px">
-      <div class="scard"><div class="snum">4</div><div style="font-size:10px;color:#7c7e7b;margin-top:3px">Submitted</div></div>
-      <div class="scard"><div class="snum">2</div><div style="font-size:10px;color:#7c7e7b;margin-top:3px">Editing</div></div>
-      <div class="scard"><div class="snum">11</div><div style="font-size:10px;color:#7c7e7b;margin-top:3px">Delivered</div></div>
+      <div class="scard"><div class="snum" id="stat-sub">0</div><div style="font-size:10px;color:#7c7e7b;margin-top:3px">Submitted</div></div>
+      <div class="scard"><div class="snum" id="stat-ed">0</div><div style="font-size:10px;color:#7c7e7b;margin-top:3px">Editing</div></div>
+      <div class="scard"><div class="snum" id="stat-del">0</div><div style="font-size:10px;color:#7c7e7b;margin-top:3px">Delivered</div></div>
     </div>
     <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#A32135;margin-bottom:12px">&#9654; Recent Submissions</div>
-    <div class="lcard"><div style="width:44px;height:36px;border-radius:4px;background:#e5e5e3;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">&#127969;</div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:900;text-transform:uppercase;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">415 Frazier Ave</div><div style="font-size:11px;color:#7c7e7b;margin-top:2px">North Shore &middot; 18 photos &middot; Apr 22</div></div><span class="badge be">Editing</span></div>
-    <div class="lcard"><div style="width:44px;height:36px;border-radius:4px;background:#e5e5e3;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">&#127968;</div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:900;text-transform:uppercase;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">8815 Hixson Pike</div><div style="font-size:11px;color:#7c7e7b;margin-top:2px">Hixson &middot; 24 photos &middot; Apr 19</div></div><span class="badge bd">Delivered</span></div>
-    <div class="lcard"><div style="width:44px;height:36px;border-radius:4px;background:#e5e5e3;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">&#127864;</div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:900;text-transform:uppercase;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">331 Signal Mtn Rd</div><div style="font-size:11px;color:#7c7e7b;margin-top:2px">Signal Mtn &middot; 30 photos &middot; Apr 14</div></div><span class="badge bd">Delivered</span></div>
-    <div class="lcard"><div style="width:44px;height:36px;border-radius:4px;background:#e5e5e3;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">&#127970;</div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:900;text-transform:uppercase;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">1104 Market St</div><div style="font-size:11px;color:#7c7e7b;margin-top:2px">Southside &middot; 12 photos &middot; Apr 10</div></div><span class="badge bdr">Draft</span></div>
+    <div id="sub-list"></div>
   </div>
 </div>
 
@@ -239,7 +239,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
 </div>
 
 <script>
-var rooms=[
+// ---- SUPABASE INIT ----
+var SUPA_URL = "https://oclulyqimtapjndravjm.supabase.co";
+var SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jbHVseXFpbXRhcGpuZHJhdmptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5ODU0MDQsImV4cCI6MjA5MjU2MTQwNH0.diKjiDYKgP_RInOzI7hgwJ0qNftKYtIdyRtzlNp6qYs";
+var supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+var currentUser = null;
+var currentSubmissionId = null;
   {n:"Living Room",t:"Stand in corner for widest angle",c:"#2a3a2d"},
   {n:"Kitchen",t:"Keep camera level with the top cabinets",c:"#3a2a28"},
   {n:"Primary Bed",t:"Stand in doorway for widest angle",c:"#2a2e3a"},
@@ -342,8 +347,9 @@ function adjExp(delta){
 }
 
 function startCam(){
+  currentSubmissionId = null;
   buildChips();
-  // Use fixed positioning to take over full screen
+  saveSubmission(); // create record immediately
   var cam=document.getElementById("p-cam");
   pages.forEach(function(p){document.getElementById(p).style.display="none";});
   cam.style.display="flex";
