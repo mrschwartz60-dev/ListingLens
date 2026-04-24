@@ -136,6 +136,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
     <div style="font-size:16px;font-weight:900;text-transform:uppercase;margin-bottom:8px">Camera Preview</div>
     <div style="font-size:12px;line-height:1.6;max-width:220px">Tap shutter to capture. Allow camera access when prompted.</div>
   </div>
+  <!-- Tap to focus indicator -->
+  <div id="focus-ring" style="display:none;position:absolute;width:64px;height:64px;border:2px solid #A32135;border-radius:50%;pointer-events:none;z-index:20;transform:translate(-50%,-50%);transition:opacity 400ms"></div>
+  <!-- Tap to focus touch area -->
+  <div id="cam-touch" style="position:absolute;inset:0;z-index:5;cursor:crosshair" onclick="tapFocus(event)"></div>
   <!-- Grid overlay -->
   <div style="position:absolute;inset:0;pointer-events:none;z-index:3">
     <div style="position:absolute;left:0;right:0;top:33%;border-top:1px solid rgba(255,255,255,.2)"></div>
@@ -153,6 +157,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
   <!-- Tip -->
   <div style="position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:10;white-space:nowrap">
     <div id="ctip" style="background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:6px 14px;font-size:11px;color:rgba(255,255,255,.9)">Stand in corner for widest angle</div>
+  </div>
+  <!-- Camera controls: zoom + exposure -->
+  <div style="position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:10px">
+    <!-- Zoom -->
+    <div style="background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="font-size:8px;color:rgba(255,255,255,.5);letter-spacing:.1em;text-transform:uppercase">ZOOM</div>
+      <button onclick="adjZoom(0.5)" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center">+</button>
+      <div id="zoom-val" style="font-size:10px;color:#fff;font-weight:700;min-width:28px;text-align:center">1.0x</div>
+      <button onclick="adjZoom(-0.5)" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center">−</button>
+    </div>
+    <!-- Exposure -->
+    <div style="background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="font-size:8px;color:rgba(255,255,255,.5);letter-spacing:.1em;text-transform:uppercase">EXP</div>
+      <button onclick="adjExp(1)" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;touch-action:manipulation">☀️</button>
+      <div id="exp-val" style="font-size:10px;color:#fff;font-weight:700;min-width:28px;text-align:center">0</div>
+      <button onclick="adjExp(-1)" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;touch-action:manipulation">🌑</button>
+    </div>
   </div>
   <!-- Room chips -->
   <div id="rbar" style="position:absolute;bottom:110px;left:0;right:0;z-index:10;padding:8px 12px;display:flex;gap:7px;overflow-x:auto;background:linear-gradient(transparent,rgba(0,0,0,.5))"></div>
@@ -220,14 +241,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
 <script>
 var rooms=[
   {n:"Living Room",t:"Stand in corner for widest angle",c:"#2a3a2d"},
-  {n:"Kitchen",t:"Shoot toward the best light",c:"#3a2a28"},
-  {n:"Primary Bed",t:"From doorway, low angle",c:"#2a2e3a"},
-  {n:"Bathroom",t:"Show vanity and tub together",c:"#3a3428"},
-  {n:"Dining Room",t:"Include windows in background",c:"#3a2838"},
-  {n:"Exterior",t:"Shoot from street, sky above",c:"#2a3a35"},
-  {n:"Garage",t:"Open door, shoot from driveway",c:"#38342a"},
-  {n:"Backyard",t:"Show depth from corner",c:"#2a3838"},
-  {n:"Bonus Room",t:"Turn on all lights first",c:"#34283a"}
+  {n:"Kitchen",t:"Keep camera level with the top cabinets",c:"#3a2a28"},
+  {n:"Primary Bed",t:"Stand in doorway for widest angle",c:"#2a2e3a"},
+  {n:"Bathroom",t:"For smaller bathrooms, try shooting vertical",c:"#3a3428"},
+  {n:"Dining Room",t:"Shoot widest angle or toward other entryways",c:"#3a2838"},
+  {n:"Exterior",t:"Center the house in the frame",c:"#2a3a35"},
+  {n:"Backyard",t:"Show depth from corner",c:"#2a3838"}
 ];
 var pages=["p-auth","p-dash","p-setup","p-cam","p-review","p-done"];
 var cur=0,photos=[],stream=null,lbIdx=0;
@@ -257,6 +276,70 @@ function swTab(i){
 }
 
 var orientLandscape=true;
+var zoomLevel=1.0;
+var expLevel=0;
+
+function tapFocus(e){
+  var v=document.getElementById("camvid");
+  if(!stream||v.style.display==="none") return;
+  var rect=e.currentTarget.getBoundingClientRect();
+  var x=(e.clientX-rect.left)/rect.width;
+  var y=(e.clientY-rect.top)/rect.height;
+  // Show focus ring
+  var ring=document.getElementById("focus-ring");
+  ring.style.left=e.clientX+"px";
+  ring.style.top=e.clientY+"px";
+  ring.style.display="block";
+  ring.style.opacity="1";
+  ring.style.transform="translate(-50%,-50%) scale(1.3)";
+  ring.style.transition="transform 150ms, opacity 400ms";
+  setTimeout(function(){
+    ring.style.transform="translate(-50%,-50%) scale(1)";
+    ring.style.borderColor="#fff";
+  },150);
+  setTimeout(function(){ring.style.opacity="0";},800);
+  setTimeout(function(){ring.style.display="none";ring.style.borderColor="#A32135";},1200);
+  // Apply focus via ImageCapture if supported
+  var track=stream.getVideoTracks()[0];
+  if(!track) return;
+  var caps=track.getCapabilities?track.getCapabilities():{};
+  if(caps.focusMode && caps.focusMode.indexOf("manual")>-1){
+    track.applyConstraints({advanced:[{focusMode:"manual",pointsOfInterest:[{x:x,y:y}]}]}).catch(function(){});
+  } else if(caps.focusMode && caps.focusMode.indexOf("continuous")>-1){
+    track.applyConstraints({advanced:[{focusMode:"continuous",pointsOfInterest:[{x:x,y:y}]}]}).catch(function(){});
+  }
+}
+
+function adjZoom(delta){
+  zoomLevel=Math.min(5,Math.max(1,Math.round((zoomLevel+delta)*10)/10));
+  document.getElementById("zoom-val").textContent=zoomLevel.toFixed(1)+"x";
+  if(!stream) return;
+  var track=stream.getVideoTracks()[0];
+  if(!track) return;
+  var caps=track.getCapabilities?track.getCapabilities():{};
+  if(caps.zoom){
+    var min=caps.zoom.min||1;
+    var max=caps.zoom.max||5;
+    var z=Math.min(max,Math.max(min,zoomLevel));
+    track.applyConstraints({advanced:[{zoom:z}]}).catch(function(){});
+  }
+}
+
+function adjExp(delta){
+  expLevel=Math.min(3,Math.max(-3,expLevel+delta));
+  document.getElementById("exp-val").textContent=(expLevel>0?"+":"")+expLevel;
+  if(!stream) return;
+  var track=stream.getVideoTracks()[0];
+  if(!track) return;
+  var caps=track.getCapabilities?track.getCapabilities():{};
+  if(caps.exposureCompensation){
+    var step=caps.exposureCompensation.step||1;
+    var min=caps.exposureCompensation.min||(-3);
+    var max=caps.exposureCompensation.max||3;
+    var ev=Math.min(max,Math.max(min,expLevel*step));
+    track.applyConstraints({advanced:[{exposureCompensation:ev,exposureMode:"manual"}]}).catch(function(){});
+  }
+}
 
 function startCam(){
   buildChips();
