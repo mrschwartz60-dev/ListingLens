@@ -1,0 +1,452 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>ListingLens by Studio12</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;color:#111;min-height:100vh}
+.pg{display:none}.pg.on{display:block}
+#p-auth{background:#111312;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 24px}
+.abox{width:100%;max-width:380px}
+.abrand{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#C04658;margin-bottom:8px}
+.atitle{font-size:52px;font-weight:900;text-transform:uppercase;line-height:.9;color:#fff;margin-bottom:6px}
+.atitle b{color:#A32135}
+.asub{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:28px}
+.tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:22px}
+.tab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;color:rgba(255,255,255,.4);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:10px 16px 10px 0;cursor:pointer}
+.tab.on{color:#fff;border-bottom-color:#A32135}
+.lbl{display:block;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:6px;margin-top:14px}
+.inp{width:100%;padding:13px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:5px;color:#fff;font-size:15px;outline:none;-webkit-appearance:none;font-family:inherit}
+.btn-r{background:#A32135;color:#fff;display:block;width:100%;padding:18px;border:none;border-radius:8px;font-size:15px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;margin-top:18px;font-family:inherit;-webkit-appearance:none;touch-action:manipulation}
+.anote{font-size:11px;color:rgba(255,255,255,.28);text-align:center;margin-top:18px;line-height:1.6}
+.bar{background:#111312;padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50}
+.logo{font-size:18px;font-weight:900;text-transform:uppercase;color:#fff}
+.logo b{color:#A32135}
+.logosub{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.15em;margin-top:1px}
+.sp{flex:1}
+.btn-sm{background:rgba(255,255,255,.08);color:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.1);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:10px 14px;border-radius:4px;cursor:pointer;font-family:inherit;-webkit-appearance:none;touch-action:manipulation}
+.dhero{background:#232524;color:#fff;padding:28px 20px 24px}
+.dhi{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:6px}
+.dh2{font-size:34px;font-weight:900;text-transform:uppercase;line-height:.93;color:#fff;margin-bottom:20px}
+.dh2 b{color:#A32135}
+.btn-big{background:#A32135;color:#fff;width:100%;padding:18px;border:none;border-radius:8px;font-size:15px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;font-family:inherit;-webkit-appearance:none;touch-action:manipulation;display:block}
+.dbody{padding:18px}
+.slbl{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#A32135;margin-bottom:12px}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.scard{background:#fff;border:1px solid #e5e5e3;border-radius:7px;padding:14px 8px;text-align:center}
+.snum{font-size:30px;font-weight:900;color:#A32135;line-height:1}
+.slb2{font-size:10px;color:#7c7e7b;margin-top:3px}
+.lcard{background:#fff;border:1px solid #e5e5e3;border-radius:7px;padding:14px;margin-bottom:9px;display:flex;align-items:center;gap:12px}
+.lth{width:44px;height:36px;border-radius:4px;background:#e5e5e3;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.li{flex:1;min-width:0}
+.la{font-size:15px;font-weight:900;text-transform:uppercase;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lm{font-size:11px;color:#7c7e7b;margin-top:2px}
+.badge{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:4px 8px;border-radius:3px;white-space:nowrap}
+.be{background:#e8f4fd;color:#1a6fa8}.bd{background:#d4edda;color:#155724}.bdr{background:#e5e5e3;color:#5a5c59}
+.sbody{padding:20px}
+.sh2{font-size:28px;font-weight:900;text-transform:uppercase;line-height:.93;margin-bottom:5px}
+.sh2 b{color:#A32135}
+.ssub{font-size:13px;color:#5a5c59;margin-bottom:22px}
+.flbl{display:block;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#5a5c59;margin-bottom:6px;margin-top:16px}
+.finp{width:100%;padding:13px 14px;background:#fff;border:1px solid #cfcfcc;border-radius:5px;font-size:15px;color:#111;outline:none;-webkit-appearance:none;font-family:inherit}
+.finp:focus{border-color:#A32135}
+.btn-out{background:#fff;color:#3c3f3d;border:1px solid #cfcfcc;width:100%;padding:16px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;margin-top:10px;font-family:inherit;-webkit-appearance:none;touch-action:manipulation}
+#p-cam{background:#000;min-height:100vh;display:flex;flex-direction:column}
+.ls-tip{background:#1a1a1a;padding:8px 16px;display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,.5)}
+.cam-wrap{position:relative;width:100%;background:#000;overflow:hidden;padding-bottom:56.25%;height:0}
+.cam-inner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+#camvid{width:100%;height:100%;object-fit:cover;display:none;position:absolute;inset:0}
+#camph{color:rgba(255,255,255,.35);text-align:center;padding:24px;position:relative;z-index:1}
+.ov{position:absolute;inset:0;pointer-events:none;z-index:2}
+.gh{position:absolute;left:0;right:0;border-top:1px solid rgba(255,255,255,.18)}
+.gv{position:absolute;top:0;bottom:0;border-left:1px solid rgba(255,255,255,.18)}
+.co{position:absolute;width:18px;height:18px;border-color:#A32135;border-style:solid}
+.co.tl{top:10px;left:10px;border-width:2px 0 0 2px}
+.co.tr{top:10px;right:10px;border-width:2px 2px 0 0}
+.co.bl{bottom:10px;left:10px;border-width:0 0 2px 2px}
+.co.br{bottom:10px;right:10px;border-width:0 2px 2px 0}
+#crm{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#A32135;color:#fff;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:3px;white-space:nowrap;z-index:3}
+#cct{position:absolute;top:10px;right:10px;font-size:10px;color:rgba(255,255,255,.8);background:rgba(0,0,0,.65);padding:5px 9px;border-radius:3px;letter-spacing:.1em;z-index:3}
+#ctip{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:7px 14px;font-size:11px;color:rgba(255,255,255,.9);white-space:nowrap;z-index:3;max-width:90%;text-align:center}
+.rbar{background:#0a0a0a;padding:10px 12px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
+.rbar::-webkit-scrollbar{display:none}
+.rchip{background:rgba(255,255,255,.07);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:9px 14px;border-radius:18px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit;-webkit-appearance:none;touch-action:manipulation}
+.rchip.on{background:#A32135;color:#fff;border-color:#A32135}
+.srow{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#000;gap:10px}
+.tstrip{display:flex;gap:5px;align-items:center;overflow-x:auto;flex:1;scrollbar-width:none}
+.tstrip::-webkit-scrollbar{display:none}
+.shutter{width:68px;height:68px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.22);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;touch-action:manipulation}
+.shutter-i{width:54px;height:54px;border-radius:50%;background:#fff;pointer-events:none}
+.rvbtn{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.16);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:12px 14px;border-radius:5px;cursor:pointer;white-space:nowrap;font-family:inherit;-webkit-appearance:none;touch-action:manipulation}
+.rbody{padding:18px}
+.rh2{font-size:26px;font-weight:900;text-transform:uppercase;margin-bottom:4px}
+.rh2 b{color:#A32135}
+.rmeta{font-size:11px;color:#7c7e7b;margin-bottom:14px}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.pcell{position:relative;aspect-ratio:16/9;border-radius:5px;overflow:hidden;border:2px solid transparent;cursor:pointer}
+.pbg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.proom{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.7));padding:3px 5px;font-size:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.9)}
+.pnum{position:absolute;top:4px;left:5px;font-size:8px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.55);padding:2px 5px;border-radius:2px}
+.pdel{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;background:rgba(163,33,53,.9);color:#fff;border:none;cursor:pointer;font-size:16px;font-weight:700;line-height:24px;text-align:center;-webkit-appearance:none;font-family:inherit;touch-action:manipulation}
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:200;flex-direction:column;align-items:center;justify-content:center}
+.lightbox.on{display:flex}
+.lb-img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:4px}
+.lb-bg{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:48px;max-height:75vh}
+.lb-bar{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:linear-gradient(rgba(0,0,0,.7),transparent)}
+.lb-room{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff}
+.lb-close{background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;touch-action:manipulation}
+.lb-nav{position:absolute;bottom:24px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:16px}
+.lb-navbtn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:20px;width:48px;height:48px;border-radius:50%;cursor:pointer;-webkit-appearance:none;touch-action:manipulation;display:flex;align-items:center;justify-content:center}
+.lb-count{font-size:12px;color:rgba(255,255,255,.6);min-width:60px;text-align:center}
+#p-done{background:#111312;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 24px;text-align:center}
+.donebox{width:100%;max-width:380px}
+.doneicon{font-size:52px;margin-bottom:16px}
+.doneh{font-size:42px;font-weight:900;text-transform:uppercase;line-height:.93;color:#fff;margin-bottom:14px}
+.doneh b{color:#A32135}
+.donep{font-size:13px;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:22px}
+.steps{display:flex;flex-direction:column;gap:8px;margin-bottom:26px;text-align:left}
+.step{display:flex;align-items:center;gap:12px;padding:10px 13px;border-radius:5px;background:rgba(255,255,255,.05)}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot.on{background:#A32135}.dot.off{background:rgba(255,255,255,.18)}
+.stxt{font-size:12px;color:rgba(255,255,255,.6)}
+.stxt strong{color:#fff;display:block;font-size:13px}
+</style>
+</head>
+<body>
+
+<div id="p-auth" class="pg on">
+  <div class="abox">
+    <div class="abrand">&#9654; A ChattRbox Collection</div>
+    <div class="atitle">Listing<br><b>Lens</b></div>
+    <div class="asub">Real estate photos &middot; by Studio12</div>
+    <div class="tabs">
+      <button class="tab on" id="tl" onclick="swTab(0)">Sign In</button>
+      <button class="tab" id="tu" onclick="swTab(1)">Sign Up</button>
+    </div>
+    <div id="f-in">
+      <label class="lbl">Email</label>
+      <input class="inp" type="email" placeholder="agent@brokerage.com">
+      <label class="lbl">Password</label>
+      <input class="inp" type="password" placeholder="••••••••">
+      <button class="btn-r" onclick="goD()">Sign In &rarr;</button>
+    </div>
+    <div id="f-up" style="display:none">
+      <label class="lbl">Full Name</label><input class="inp" type="text" placeholder="Jane Smith">
+      <label class="lbl">Brokerage</label><input class="inp" type="text" placeholder="Keller Williams">
+      <label class="lbl">Email</label><input class="inp" type="email" placeholder="agent@brokerage.com">
+      <label class="lbl">Password</label><input class="inp" type="password" placeholder="Create password">
+      <button class="btn-r" onclick="goD()">Create Account &rarr;</button>
+    </div>
+    <p class="anote">Professional photo editing &middot; next-morning delivery.</p>
+  </div>
+</div>
+
+<div id="p-dash" class="pg">
+  <div class="bar">
+    <div><div class="logo">Listing<b>Lens</b></div><div class="logosub">BY STUDIO12</div></div>
+    <div class="sp"></div>
+    <div style="width:32px;height:32px;border-radius:50%;background:#A32135;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0">JS</div>
+    <button class="btn-sm" onclick="show('p-auth')">Out</button>
+  </div>
+  <div class="dhero">
+    <div class="dhi">&#9654; Good morning, Agent</div>
+    <div class="dh2">Your <b>Listings</b></div>
+    <button class="btn-big" onclick="show('p-setup')">&#128247; Photograph New Listing</button>
+  </div>
+  <div class="dbody">
+    <div class="sgrid">
+      <div class="scard"><div class="snum">4</div><div class="slb2">Submitted</div></div>
+      <div class="scard"><div class="snum">2</div><div class="slb2">Editing</div></div>
+      <div class="scard"><div class="snum">11</div><div class="slb2">Delivered</div></div>
+    </div>
+    <div class="slbl">&#9654; Recent Submissions</div>
+    <div class="lcard"><div class="lth">&#127969;</div><div class="li"><div class="la">415 Frazier Ave</div><div class="lm">North Shore &middot; 18 photos &middot; Apr 22</div></div><span class="badge be">Editing</span></div>
+    <div class="lcard"><div class="lth">&#127968;</div><div class="li"><div class="la">8815 Hixson Pike</div><div class="lm">Hixson &middot; 24 photos &middot; Apr 19</div></div><span class="badge bd">Delivered</span></div>
+    <div class="lcard"><div class="lth">&#127864;</div><div class="li"><div class="la">331 Signal Mtn Rd</div><div class="lm">Signal Mtn &middot; 30 photos &middot; Apr 14</div></div><span class="badge bd">Delivered</span></div>
+    <div class="lcard"><div class="lth">&#127970;</div><div class="li"><div class="la">1104 Market St</div><div class="lm">Southside &middot; 12 photos &middot; Apr 10</div></div><span class="badge bdr">Draft</span></div>
+  </div>
+</div>
+
+<div id="p-setup" class="pg">
+  <div class="bar">
+    <button class="btn-sm" onclick="show('p-dash')">&larr; Back</button>
+    <div class="sp"></div>
+    <div class="logo">Listing<b>Lens</b></div>
+  </div>
+  <div class="sbody">
+    <div class="sh2">New <b>Listing</b></div>
+    <p class="ssub">Enter the property details to get started.</p>
+    <label class="flbl">Property Address</label>
+    <input class="finp" type="text" id="paddr" placeholder="123 Main St, Chattanooga, TN">
+    <label class="flbl">Property Type</label>
+    <select class="finp" id="ptype">
+      <option>Single Family Home</option>
+      <option>Condo / Townhome</option>
+      <option>Multi-Family</option>
+      <option>Commercial</option>
+      <option>Land / Lot</option>
+    </select>
+    <label class="flbl">Notes (optional)</label>
+    <input class="finp" id="pnotes" placeholder="Access instructions, special features...">
+    <button class="btn-r" style="margin-top:20px" onclick="startCam()">&#9654; Start Shooting</button>
+    <button class="btn-out" onclick="show('p-dash')">Cancel</button>
+  </div>
+</div>
+
+<div id="p-cam" class="pg">
+  <div class="bar">
+    <button class="btn-sm" onclick="show('p-setup')">&larr; Setup</button>
+    <div class="sp" style="text-align:center;font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.15em">CAMERA MODE</div>
+    <button class="btn-sm" onclick="show('p-review')">Review (<span id="csm">0</span>)</button>
+  </div>
+  <div class="ls-tip">&#8635; Rotate phone landscape for best shots</div>
+  <div class="cam-wrap">
+    <div class="cam-inner">
+      <video id="camvid" autoplay playsinline muted></video>
+      <div id="camph">
+        <div style="font-size:36px;margin-bottom:10px">&#128247;</div>
+        <div style="font-size:14px;font-weight:900;text-transform:uppercase;margin-bottom:6px">Camera Preview</div>
+        <div style="font-size:11px;line-height:1.6;max-width:200px">Rotate to landscape then tap shutter to capture.</div>
+      </div>
+      <div class="ov">
+        <div class="gh" style="top:33%"></div><div class="gh" style="top:66%"></div>
+        <div class="gv" style="left:33%"></div><div class="gv" style="left:66%"></div>
+        <div class="co tl"></div><div class="co tr"></div><div class="co bl"></div><div class="co br"></div>
+        <div id="crm">Living Room</div>
+        <div id="cct">0 / 30</div>
+        <div id="ctip">Stand in corner for widest angle</div>
+      </div>
+    </div>
+  </div>
+  <div class="rbar" id="rbar"></div>
+  <div class="srow">
+    <div class="tstrip" id="tstrip"><span style="font-size:10px;color:rgba(255,255,255,.28)">No photos yet</span></div>
+    <button class="shutter" onclick="snap()"><div class="shutter-i"></div></button>
+    <button class="rvbtn" onclick="show('p-review')">Review &rarr;</button>
+  </div>
+</div>
+
+<div id="p-review" class="pg">
+  <div class="bar">
+    <button class="btn-sm" onclick="show('p-cam')">&larr; Camera</button>
+    <div class="sp" style="text-align:center;font-size:14px;font-weight:900;text-transform:uppercase;color:#fff">Review</div>
+    <span style="font-size:10px;color:rgba(255,255,255,.4)" id="rct">0 photos</span>
+  </div>
+  <div class="rbody">
+    <div class="rh2">Review &amp; <b>Edit</b></div>
+    <div class="rmeta" id="rmeta">Tap photo to zoom &middot; tap x to delete</div>
+    <div class="pgrid" id="pgrid">
+      <div style="grid-column:1/-1;text-align:center;padding:32px;color:#a8a8a5;font-size:13px">No photos yet.</div>
+    </div>
+    <button class="btn-r" onclick="doSubmit()">Submit to Studio12 &rarr;</button>
+    <button class="btn-out" onclick="show('p-cam')">&larr; Add More Photos</button>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <div class="lb-bar">
+    <div class="lb-room" id="lb-room">Room</div>
+    <button class="lb-close" onclick="closeLb()">X</button>
+  </div>
+  <img id="lb-img" class="lb-img" src="" alt="" style="display:none">
+  <div id="lb-bg" class="lb-bg" style="display:none"></div>
+  <div class="lb-nav">
+    <button class="lb-navbtn" onclick="lbNav(-1)">&larr;</button>
+    <span class="lb-count" id="lb-count">1 / 1</span>
+    <button class="lb-navbtn" onclick="lbNav(1)">&rarr;</button>
+  </div>
+</div>
+
+<div id="p-done" class="pg">
+  <div class="donebox">
+    <div class="doneicon">&#9989;</div>
+    <div class="doneh">Photos <b>Submitted!</b></div>
+    <div class="donep">Your photos are on their way. We will notify you when your edited images are ready.</div>
+    <div class="steps">
+      <div class="step"><div class="dot on"></div><div class="stxt"><strong>Uploaded to S12</strong>Photos received by Studio12</div></div>
+      <div class="step"><div class="dot on"></div><div class="stxt"><strong>Editing Queued</strong>Processing started</div></div>
+      <div class="step"><div class="dot off"></div><div class="stxt"><strong>S12 Review</strong>Quality check by our team</div></div>
+      <div class="step"><div class="dot off"></div><div class="stxt"><strong>Delivered to You</strong>Next-morning via dashboard</div></div>
+    </div>
+    <button class="btn-r" onclick="reset()">&larr; Back to Dashboard</button>
+  </div>
+</div>
+
+<script>
+var rooms=[
+  {n:"Living Room",t:"Stand in corner for widest angle",c:"#2a3a2d"},
+  {n:"Kitchen",t:"Shoot toward the best light",c:"#3a2a28"},
+  {n:"Primary Bed",t:"From doorway, low angle",c:"#2a2e3a"},
+  {n:"Bathroom",t:"Show vanity and tub together",c:"#3a3428"},
+  {n:"Dining Room",t:"Include windows in background",c:"#3a2838"},
+  {n:"Exterior",t:"Shoot from street, sky above",c:"#2a3a35"},
+  {n:"Garage",t:"Open door, shoot from driveway",c:"#38342a"},
+  {n:"Backyard",t:"Show depth from corner",c:"#2a3838"},
+  {n:"Bonus Room",t:"Turn on all lights first",c:"#34283a"}
+];
+var cur=0,photos=[],addr="",stream=null,lbIdx=0;
+
+function goD(){show("p-dash");}
+
+function show(id){
+  document.querySelectorAll(".pg").forEach(function(p){p.classList.remove("on");});
+  document.getElementById(id).classList.add("on");
+  window.scrollTo(0,0);
+  if(id==="p-review") renderReview();
+  if(id==="p-cam" && !stream) tryCamera();
+}
+
+function swTab(i){
+  document.getElementById("f-in").style.display=i===0?"block":"none";
+  document.getElementById("f-up").style.display=i===1?"block":"none";
+  document.getElementById("tl").className="tab"+(i===0?" on":"");
+  document.getElementById("tu").className="tab"+(i===1?" on":"");
+}
+
+function startCam(){
+  addr=document.getElementById("paddr").value||"New-Listing";
+  buildChips();
+  show("p-cam");
+}
+
+function tryCamera(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) return;
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},aspectRatio:{ideal:1.777}}})
+    .then(function(s){
+      stream=s;
+      var v=document.getElementById("camvid");
+      v.srcObject=s;
+      v.style.display="block";
+      document.getElementById("camph").style.display="none";
+    }).catch(function(){});
+}
+
+function buildChips(){
+  var b=document.getElementById("rbar");
+  b.innerHTML="";
+  rooms.forEach(function(r,i){
+    var c=document.createElement("button");
+    c.className="rchip"+(i===0?" on":"");
+    c.textContent=r.n;
+    (function(idx){c.onclick=function(){selRoom(idx);};})(i);
+    b.appendChild(c);
+  });
+}
+
+function selRoom(i){
+  cur=i;
+  document.querySelectorAll(".rchip").forEach(function(c,j){c.classList.toggle("on",j===i);});
+  document.getElementById("crm").textContent=rooms[i].n;
+  document.getElementById("ctip").textContent=rooms[i].t;
+}
+
+function snap(){
+  if(photos.length>=30){alert("Max 30 photos reached.");return;}
+  var v=document.getElementById("camvid"),du=null;
+  if(v.style.display!=="none"&&v.readyState>=2){
+    var c=document.createElement("canvas");
+    c.width=v.videoWidth; c.height=v.videoHeight;
+    c.getContext("2d").drawImage(v,0,0);
+    du=c.toDataURL("image/jpeg",0.85);
+  }
+  photos.push({id:Date.now(),room:rooms[cur].n,c:rooms[cur].c,du:du});
+  updUI();
+  flash();
+}
+
+function updUI(){
+  var n=photos.length;
+  document.getElementById("cct").textContent=n+" / 30";
+  document.getElementById("csm").textContent=n;
+  var s=document.getElementById("tstrip");
+  s.innerHTML="";
+  var sl=photos.slice(-6);
+  if(!sl.length){
+    s.innerHTML='<span style="font-size:10px;color:rgba(255,255,255,.28)">No photos yet</span>';
+    return;
+  }
+  sl.forEach(function(p){
+    var d=document.createElement("div");
+    if(p.du){
+      d.style.cssText="width:44px;height:32px;border-radius:3px;flex-shrink:0;background:url("+p.du+") center/cover no-repeat";
+    } else {
+      d.style.cssText="width:44px;height:32px;border-radius:3px;flex-shrink:0;background:"+p.c;
+    }
+    s.appendChild(d);
+  });
+  s.scrollLeft=9999;
+}
+
+function flash(){
+  var vp=document.querySelector(".cam-inner");
+  var f=document.createElement("div");
+  f.style.cssText="position:absolute;inset:0;background:#fff;opacity:.6;pointer-events:none;z-index:99;transition:opacity 180ms";
+  vp.appendChild(f);
+  setTimeout(function(){
+    f.style.opacity="0";
+    setTimeout(function(){if(f.parentNode)f.parentNode.removeChild(f);},200);
+  },60);
+}
+
+function renderReview(){
+  var n=photos.length;
+  document.getElementById("rct").textContent=n+" photos";
+  var g=document.getElementById("pgrid");
+  g.innerHTML="";
+  if(!n){
+    g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:32px;color:#a8a8a5;font-size:13px">No photos yet.</div>';
+    return;
+  }
+  photos.forEach(function(p,i){
+    var cell=document.createElement("div");
+    cell.className="pcell";
+    var bg=document.createElement("div");
+    bg.className="pbg";
+    if(p.du) bg.style.cssText="position:absolute;inset:0;background:url("+p.du+") center/cover no-repeat";
+    else bg.style.background=p.c;
+    var num=document.createElement("div");
+    num.className="pnum";
+    num.textContent="#"+(i+1);
+    var rm=document.createElement("div");
+    rm.className="proom";
+    rm.textContent=p.room;
+    var del=document.createElement("button");
+    del.className="pdel";
+    del.textContent="x";
+    (function(idx){
+      del.onclick=function(e){e.stopPropagation();photos.splice(idx,1);renderReview();updUI();};
+      cell.onclick=function(){openLb(idx);};
+    })(i);
+    cell.appendChild(bg);
+    cell.appendChild(num);
+    cell.appendChild(rm);
+    cell.appendChild(del);
+    g.appendChild(cell);
+  });
+}
+
+function openLb(i){lbIdx=i;showLb();document.getElementById("lightbox").classList.add("on");}
+function closeLb(){document.getElementById("lightbox").classList.remove("on");}
+function lbNav(d){lbIdx=(lbIdx+d+photos.length)%photos.length;showLb();}
+
+function showLb(){
+  var p=photos[lbIdx];
+  var img=document.getElementById("lb-img");
+  var bg=document.getElementById("lb-bg");
+  if(p.du){img.src=p.du;img.style.display="block";bg.style.display="none";}
+  else{img.style.display="none";bg.style.display="flex";bg.style.background=p.c;}
+  document.getElementById("lb-room").textContent=p.room;
+  document.getElementById("lb-count").textContent=(lbIdx+1)+" / "+photos.length;
+}
+
+function doSubmit(){
+  if(!photos.length){alert("Please take at least 1 photo first.");return;}
+  show("p-done");
+}
+
+function reset(){photos=[];cur=0;addr="";updUI();show("p-dash");}
+</script>
+</body>
+</html>
