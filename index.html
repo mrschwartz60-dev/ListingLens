@@ -169,7 +169,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
     <div id="tstrip" style="display:flex;gap:5px;align-items:center;overflow-x:auto;flex:1;max-width:35%"><span style="font-size:9px;color:rgba(255,255,255,.3);white-space:nowrap">No photos</span></div>
     <button class="shutter" onclick="snap()" style="flex-shrink:0"><div style="width:54px;height:54px;border-radius:50%;background:#fff;pointer-events:none"></div></button>
     <div style="display:flex;flex-direction:column;gap:8px;align-items:center;max-width:35%">
-      <button onclick="toggleOrient()" id="orient-btn" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:8px 10px;border-radius:6px;cursor:pointer;touch-action:manipulation;white-space:nowrap;width:100%">&#8645; Landscape</button>
       <button onclick="show('p-review')" style="background:#A32135;border:none;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:8px 10px;border-radius:6px;cursor:pointer;touch-action:manipulation;white-space:nowrap;width:100%">Review (<span id="csm">0</span>)</button>
     </div>
   </div>
@@ -240,7 +239,28 @@ var rooms=[
 
 var pages=["p-auth","p-dash","p-setup","p-cam","p-review","p-done"];
 var cur=0,photos=[],stream=null,lbIdx=0;
-var orientLandscape=true,zoomLevel=1.0,expLevel=0;
+var orientLandscape=true,zoomLevel=0.5,expLevel=0;
+
+// Auto-detect orientation and restart camera
+window.addEventListener("orientationchange",function(){
+  setTimeout(function(){
+    if(stream){
+      stream.getTracks().forEach(function(t){t.stop();});
+      stream=null;
+    }
+    tryCamera();
+  },300);
+});
+
+window.addEventListener("resize",function(){
+  if(document.getElementById("p-cam").style.display==="flex"){
+    if(stream){
+      stream.getTracks().forEach(function(t){t.stop();});
+      stream=null;
+    }
+    tryCamera();
+  }
+});
 
 // AUTH
 function swTab(i){
@@ -353,23 +373,30 @@ function exitCam(){show("p-dash");}
 
 function tryCamera(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
+  var isLandscape=window.innerWidth>window.innerHeight;
   var c={video:{facingMode:{ideal:"environment"}}};
-  if(orientLandscape){c.video.width={ideal:1920};c.video.height={ideal:1080};}
+  if(isLandscape){c.video.width={ideal:1920};c.video.height={ideal:1080};}
   else{c.video.width={ideal:1080};c.video.height={ideal:1920};}
   navigator.mediaDevices.getUserMedia(c).then(function(s){
     stream=s;
     var v=document.getElementById("camvid");
     v.srcObject=s;v.style.display="block";
     document.getElementById("camph").style.display="none";
+    // Apply default 0.5x zoom if supported
+    var track=s.getVideoTracks()[0];
+    if(track){
+      var caps=track.getCapabilities?track.getCapabilities():{};
+      if(caps.zoom){
+        var minZ=caps.zoom.min||0.5;
+        track.applyConstraints({advanced:[{zoom:minZ}]}).catch(function(){});
+        zoomLevel=minZ;
+        document.getElementById("zoom-val").textContent=zoomLevel.toFixed(1)+"x";
+      }
+    }
   }).catch(function(){});
 }
 
-function toggleOrient(){
-  orientLandscape=!orientLandscape;
-  document.getElementById("orient-btn").textContent=orientLandscape?"⇅ Landscape":"⇅ Portrait";
-  if(stream){stream.getTracks().forEach(function(t){t.stop();});stream=null;}
-  tryCamera();
-}
+function toggleOrient(){}
 
 function buildChips(){
   var b=document.getElementById("rbar");b.innerHTML="";
