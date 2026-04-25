@@ -36,6 +36,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
 .stxt{font-size:12px;color:rgba(255,255,255,.6)}
 .stxt strong{color:#fff;display:block;font-size:13px}
 .co{position:absolute;width:18px;height:18px;border-color:#A32135;border-style:solid}
+.upgrade-menu{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;display:flex;align-items:flex-end;justify-content:center}
+.upgrade-sheet{background:#fff;width:100%;max-width:480px;border-radius:16px 16px 0 0;padding:20px 20px 40px}
+.upgrade-title{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7c7e7b;margin-bottom:16px;text-align:center}
+.upgrade-opt{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid #e5e5e3;border-radius:8px;margin-bottom:8px;cursor:pointer;touch-action:manipulation;background:#fff;width:100%;font-family:inherit;text-align:left}
+.upgrade-opt:active{background:#f5e4e7}
+.upgrade-opt-name{font-size:15px;font-weight:600;color:#111}
+.upgrade-opt-check{width:22px;height:22px;border-radius:50%;border:2px solid #cfcfcc;flex-shrink:0}
+.upgrade-opt.selected .upgrade-opt-check{background:#A32135;border-color:#A32135}
+.upgrade-badge{position:absolute;bottom:22px;left:4px;right:28px;background:rgba(163,33,53,.9);color:#fff;font-size:8px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 5px;border-radius:3px;z-index:4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upgrade-btn{position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;border-radius:3px;cursor:pointer;touch-action:manipulation;z-index:4}
 .co.tl{top:10px;left:10px;border-width:2px 0 0 2px}
 .co.tr{top:10px;right:10px;border-width:2px 2px 0 0}
 .co.bl{bottom:10px;left:10px;border-width:0 0 2px 2px}
@@ -185,6 +195,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
     <div style="font-size:11px;color:#7c7e7b;margin-bottom:14px">Tap photo to zoom &middot; tap x to delete</div>
     <div id="pgrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
     <button class="btn-r" onclick="doSubmit()">Submit to Studio12 &rarr;</button>
+    <button class="btn-out" onclick="saveDraft()">Save as Draft</button>
     <button class="btn-out" onclick="show('p-cam')">&larr; Add More Photos</button>
   </div>
 </div>
@@ -210,11 +221,59 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
     <div style="font-size:13px;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:22px">Your photos are on their way. We will notify you when your edited images are ready.</div>
     <div style="margin-bottom:26px;text-align:left">
       <div id="submit-status" style="font-size:13px;color:#A32135;font-weight:700;text-align:center;padding:12px;background:rgba(163,33,53,.1);border-radius:6px;margin-bottom:12px">Uploading photos...</div><div class="step"><div class="dot on"></div><div class="stxt"><strong>Uploaded to S12</strong>Photos received by Studio12</div></div>
-      <div class="step"><div class="dot on"></div><div class="stxt"><strong>Editing Queued</strong>Processing started</div></div>
+      <div class="step"><div class="dot off"></div><div class="stxt"><strong>Editing Queued</strong>Your editor will be notified</div></div>
       <div class="step"><div class="dot off"></div><div class="stxt"><strong>S12 Review</strong>Quality check by our team</div></div>
       <div class="step"><div class="dot off"></div><div class="stxt"><strong>Delivered to You</strong>Next-morning via dashboard</div></div>
     </div>
     <button class="btn-r" onclick="reset()">&larr; Back to Dashboard</button>
+  </div>
+</div>
+
+<!-- DELIVERY PAGE -->
+<div id="p-delivery" style="display:none;flex-direction:column;background:#f2f2f1;min-height:100vh">
+  <div class="bar">
+    <button class="btn-sm" onclick="show('p-dash')">&larr; Back</button>
+    <div class="sp" style="text-align:center;font-size:14px;font-weight:900;text-transform:uppercase;color:#fff">Final Photos</div>
+    <span id="delivery-count" style="font-size:10px;color:rgba(255,255,255,.4)"></span>
+  </div>
+  <div style="padding:18px">
+    <div style="font-size:22px;font-weight:900;text-transform:uppercase;margin-bottom:4px">Your <b style="color:#A32135">Finals</b></div>
+    <div id="delivery-addr" style="font-size:12px;color:#7c7e7b;margin-bottom:16px"></div>
+    <div id="delivery-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px">
+      <div style="grid-column:1/-1;text-align:center;padding:32px;color:#a8a8a5;font-size:13px">Loading photos...</div>
+    </div>
+    <button class="btn-r" onclick="downloadAllFinals()">&#8595; Download All Photos</button>
+  </div>
+</div>
+
+<!-- UPGRADE MENU -->
+<div id="upgrade-menu" class="upgrade-menu" style="display:none" onclick="closeUpgradeMenu(event)">
+  <div class="upgrade-sheet" onclick="event.stopPropagation()">
+    <div class="upgrade-title">Select Upgrade for Photo <span id="upgrade-photo-num"></span></div>
+    <button class="upgrade-opt" id="uopt-none" onclick="selectUpgrade(null)">
+      <span class="upgrade-opt-name">No Upgrade</span>
+      <div class="upgrade-opt-check"></div>
+    </button>
+    <button class="upgrade-opt" id="uopt-0" onclick="selectUpgrade('Room Clear')">
+      <span class="upgrade-opt-name">Room Clear</span>
+      <div class="upgrade-opt-check"></div>
+    </button>
+    <button class="upgrade-opt" id="uopt-1" onclick="selectUpgrade('Virtual Twilight')">
+      <span class="upgrade-opt-name">Virtual Twilight</span>
+      <div class="upgrade-opt-check"></div>
+    </button>
+    <button class="upgrade-opt" id="uopt-2" onclick="selectUpgrade('Virtual Staging')">
+      <span class="upgrade-opt-name">Virtual Staging</span>
+      <div class="upgrade-opt-check"></div>
+    </button>
+    <button class="upgrade-opt" id="uopt-3" onclick="selectUpgrade('Grass Greening')">
+      <span class="upgrade-opt-name">Grass Greening</span>
+      <div class="upgrade-opt-check"></div>
+    </button>
+    <button class="upgrade-opt" id="uopt-4" onclick="selectUpgrade('Car Removal')">
+      <span class="upgrade-opt-name">Car Removal</span>
+      <div class="upgrade-opt-check"></div>
+    </button>
   </div>
 </div>
 
@@ -232,7 +291,7 @@ var rooms=[
   {n:"Exterior",t:"Center the house in the frame",c:"#2a3a35"},
   {n:"Backyard",t:"Show depth from corner",c:"#2a3838"}
 ];
-var pages=["p-auth","p-dash","p-setup","p-cam","p-review","p-done"];
+var pages=["p-auth","p-dash","p-setup","p-cam","p-review","p-done","p-delivery"];
 var cur=0,photos=[],stream=null,lbIdx=0;
 var zoomLevel=0.5,expLevel=0;
 
@@ -278,9 +337,10 @@ async function doSignOut(){
 
 async function loadDash(){
   var prof=await supa.from("profiles").select("*").eq("id",currentUser.id).single();
-  var name=prof.data?prof.data.full_name.split(" ")[0]:"Agent";
-  document.getElementById("dash-name").textContent="Good morning, "+name;
-  document.getElementById("dash-initial").textContent=name.charAt(0).toUpperCase();
+  var fullName=prof.data?prof.data.full_name:"Agent";
+  var firstName=fullName.split(" ")[0];
+  document.getElementById("dash-name").textContent="Hello, "+fullName+"!";
+  document.getElementById("dash-initial").textContent=firstName.charAt(0).toUpperCase();
   var subs=await supa.from("submissions").select("*").eq("agent_id",currentUser.id).order("created_at",{ascending:false});
   renderSubmissions(subs.data||[]);
   show("p-dash");
@@ -288,17 +348,23 @@ async function loadDash(){
 
 function renderSubmissions(subs){
   var stats={Submitted:0,Editing:0,Delivered:0};
-  subs.forEach(function(s){if(stats[s.status]!==undefined)stats[s.status]++;});
+  subs.forEach(function(s){
+    if(s.status==="Submitted"||s.status==="Draft") stats["Submitted"]++;
+    else if(s.status==="Editing") stats["Editing"]++;
+    else if(s.status==="Delivered") stats["Delivered"]++;
+  });
   document.getElementById("stat-sub").textContent=stats["Submitted"];
   document.getElementById("stat-ed").textContent=stats["Editing"];
   document.getElementById("stat-del").textContent=stats["Delivered"];
   var list=document.getElementById("sub-list");list.innerHTML="";
-  if(!subs.length){list.innerHTML="<div style='font-size:13px;color:#7c7e7b;padding:16px 0'>No submissions yet.</div>";return;}
+  if(!subs.length){list.innerHTML="<div style='font-size:13px;color:#7c7e7b;padding:16px 0'>No submissions yet. Tap Photograph New Listing to get started!</div>";return;}
   subs.slice(0,8).forEach(function(s){
     var d=new Date(s.created_at);
     var ds=(d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear();
-    var bc=s.status==="Editing"?"be":s.status==="Delivered"?"bd":"bdr";
-    list.innerHTML+="<div class='lcard'><div style='width:44px;height:36px;border-radius:4px;background:#e5e5e3;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0'>&#127969;</div><div style='flex:1;min-width:0'><div style='font-size:15px;font-weight:900;text-transform:uppercase;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>"+s.address+"</div><div style='font-size:11px;color:#7c7e7b;margin-top:2px'>"+s.property_type+" &middot; "+s.photo_count+" photos &middot; "+ds+"</div></div><span class='badge "+bc+"'>"+s.status+"</span></div>";
+    var bc=s.status==="Editing"?"be":s.status==="Delivered"?"bd":s.status==="Draft"?"bdr":"bdr";
+    var clickAction=s.status==="Draft"?"loadDraft('"+s.id+"')":s.status==="Delivered"?"viewDelivered('"+s.id+"','"+s.address.replace(/'/g,"")+"')":"";
+    var cursor=clickAction?"cursor:pointer":"";
+    list.innerHTML+="<div class='lcard' style='"+cursor+"' onclick=""+clickAction+""><div style='width:44px;height:36px;border-radius:4px;background:#e5e5e3;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0'>&#127969;</div><div style='flex:1;min-width:0'><div style='font-size:15px;font-weight:900;text-transform:uppercase;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>"+s.address+"</div><div style='font-size:11px;color:#7c7e7b;margin-top:2px'>"+s.property_type+" &middot; "+s.photo_count+" photos &middot; "+ds+"</div></div><span class='badge "+bc+"'>"+s.status+"</span></div>";
   });
 }
 
@@ -518,11 +584,22 @@ function renderReview(){
     var del=document.createElement("button");
     del.style.cssText="position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;background:rgba(163,33,53,.9);color:#fff;border:none;cursor:pointer;font-size:14px;font-weight:700;line-height:26px;text-align:center;z-index:3;touch-action:manipulation";
     del.textContent="x";
+    var upg=document.createElement("button");
+    upg.className="upgrade-btn";
+    upg.textContent="+ Upgrade";
+    var upgBadge=null;
+    if(p.upgrade){
+      upgBadge=document.createElement("div");
+      upgBadge.className="upgrade-badge";
+      upgBadge.textContent=p.upgrade;
+    }
     (function(idx){
       del.onclick=function(e){e.stopPropagation();photos.splice(idx,1);renderReview();updUI();};
       cell.onclick=function(){openLb(idx);};
+      upg.onclick=function(e){e.stopPropagation();openUpgradeMenu(idx);};
     })(i);
-    cell.appendChild(num);cell.appendChild(rm);cell.appendChild(del);
+    cell.appendChild(num);cell.appendChild(rm);cell.appendChild(del);cell.appendChild(upg);
+    if(upgBadge)cell.appendChild(upgBadge);
     g.appendChild(cell);
   });
 }
@@ -557,7 +634,8 @@ async function uploadToDropbox(photos, address){
     var arr=new Uint8Array(bin.length);
     for(var j=0;j<bin.length;j++) arr[j]=bin.charCodeAt(j);
     var blob=new Blob([arr],{type:"image/jpeg"});
-    var filename=basePath+"/"+p.room.replace(/\s+/g,"_")+"_"+(i+1)+".jpg";
+    var upgradeSuffix=p.upgrade?"_"+p.upgrade.replace(/\s+/g,"_").toUpperCase():"";
+    var filename=basePath+"/"+p.room.replace(/\s+/g,"_")+"_"+(i+1)+upgradeSuffix+".jpg";
     try{
       var res=await fetch("https://content.dropboxapi.com/2/files/upload",{
         method:"POST",
@@ -582,6 +660,131 @@ async function uploadToDropbox(photos, address){
 function showSubmitStatus(msg){
   var el=document.getElementById("submit-status");
   if(el) el.textContent=msg;
+}
+
+var activeUpgradeIdx=null;
+var upgrades=["Room Clear","Virtual Twilight","Virtual Staging","Grass Greening","Car Removal"];
+var finalPhotos=[];
+var currentDeliveryAddr="";
+var DBX_TOKEN="sl.u.AGcyCPMvqs_RD2g3M_lVVCvxYAeM5JrOqDkJbplE0b3rLuxJ9llTcMaXrMdXd5ZOIAurogMW4Kt3Uuiwi5uuhjn-lQk8NyyYzfs_wNrkj4qj4QErM4p3j5DdBA4zQKZqsJYpWsQzG7gr2WYV12opGK6fVQCJkJH6M7_Rgx-KpeWp6RpGJMxRLSfgUjGg0lWOomJgiZvQurp4OUgi8Cl9xQVhJ7MsUfL_faVABPGVvmBFQZyEpTrfMqY94yiDnmrOIHhp8mk5GH-b9jrc-83lMOUzhX7YYJsxknKc8ZHoc8tSrhiFxhRf1KXd2Rs9SpZWoHQ-nSyH5NxrUYmdXqZbfkhtXDK0av1w3mOPe0F7E-gInirrreU8arWplWuIaU6aHeAueGpsn_GG4kEa2B8BCkWl9EM3l83Hrzsd4r4AXyNOhI_Z_qT3xPWXrXTSeY2myt42m8xg9IZRXDz0sBz8v4Z2myLHJ2vhjQ0BqT1H9x7fjNGjDYVBAYAaTrRHK5zltfMXEv1hEOuVkGzwQ37JRS6Qa-syBkMvtRchDCIupRv1dnJL4jc_NL-X1la1E3OgQ9QEq3JB_zJ9YJyoC4zNlqzH2A3Jog0Bf3tv712FMEeY6BdifonXoGAQUaWWCV8Uc38FTE-CiEr_Zh-cpp3kSgWV2lGPlwNHBXPdmNs8mnzBBFQ5OPnoTazGOilVd_oPKqlWAWCBZoM77fkNzgBRMEuG7wve8W89iiVVdhRwitxrCAtHDIhXg6F8b5byCJAG828oLxyJWq5WPSpPQDo1fh6sE8m0SVyWnYSlxBZxm-hj4OcPJgrwRArFz86GlGhHztzy0joyKDiVD-T-jMhlunNL23_0j8t3vgTVf9sDH3RolrGbq9CRnweFpO9zNCxMcqrhdG_TjVv2vpZxtYoMvjoH4Toa61P8mAU__VTVMV1XvswoXh4W2UNQnrFGIvUSCQvFBsYEbuaN6l1jEZjaLVi6QbZ2wMRfsVnHRWtSFYDn57IX5xWFddPF0mzxRXqpA-_ymEhFg2dOnvQ1xp8ZBtNdjOaoloa4ABq6_OaJB0A2qCWdAxRSIVcybZnVETsOljtqYpfS2ARTs-7fyhjlAllX-bu_U3A-Day_Sd5lN-tn7oPcQYCwQ1XUF1dlvB1_zMb38zG9Irt6CPGl4sQQxQ1_aTUP2rZj0pHak5cGoYVxdlNgA7g8cctDUVCqWykGBKEoa1rTDo5rYBTUysHsf_youmLihKf2A9OdtwX1PjPQHV3r8dvjwASlrNapC19rJ8Me6CKrVqV9gQl5ZMHnZmXdcQjpEhJUmDO_KykEPCW8zvU_NKQGojpg2nCGQZUYP1Btj7K60a0cEkgcLIcr_s122-HIowuE7MAbMEy9uwPl2OuwAFh2outCYasLJ6Msop27HctTGFppCaQnoRSlwJE438fyFzJfOAJnGQ37plX0mA";
+
+function openUpgradeMenu(idx){
+  activeUpgradeIdx=idx;
+  document.getElementById("upgrade-photo-num").textContent="#"+(idx+1);
+  document.querySelectorAll(".upgrade-opt").forEach(function(b){b.classList.remove("selected");});
+  var cur=photos[idx].upgrade||null;
+  if(!cur){document.getElementById("uopt-none").classList.add("selected");}
+  else{var i=upgrades.indexOf(cur);if(i>=0)document.getElementById("uopt-"+i).classList.add("selected");}
+  document.getElementById("upgrade-menu").style.display="flex";
+}
+
+function closeUpgradeMenu(e){document.getElementById("upgrade-menu").style.display="none";}
+
+function selectUpgrade(val){
+  if(activeUpgradeIdx===null)return;
+  photos[activeUpgradeIdx].upgrade=val;
+  document.getElementById("upgrade-menu").style.display="none";
+  renderReview();
+}
+
+async function exitCam(){
+  if(photos.length===0&&currentSubmissionId){
+    await supa.from("submissions").delete().eq("id",currentSubmissionId);
+    currentSubmissionId=null;
+  }
+  show("p-dash");
+  loadDash();
+}
+
+async function saveDraft(){
+  if(!photos.length){alert("No photos to save.");return;}
+  if(!currentSubmissionId){await saveSubmission();}
+  var draftPhotos=photos.map(function(p){return {id:p.id,room:p.room,c:p.c,upgrade:p.upgrade||null,du:p.du};});
+  var res=await supa.from("submissions").update({is_draft:true,draft_photos:draftPhotos,photo_count:photos.length,status:"Draft"}).eq("id",currentSubmissionId);
+  if(res.error){alert("Could not save draft. Please try again.");return;}
+  alert("Draft saved! You can continue later from your dashboard.");
+  photos=[];currentSubmissionId=null;
+  loadDash();
+}
+
+async function loadDraft(subId){
+  var res=await supa.from("submissions").select("*").eq("id",subId).single();
+  if(res.error||!res.data){alert("Could not load draft.");return;}
+  var sub=res.data;
+  photos=sub.draft_photos||[];
+  currentSubmissionId=subId;
+  document.getElementById("paddr").value=sub.address||"";
+  document.getElementById("ptype").value=sub.property_type||"Single Family Home";
+  document.getElementById("pnotes").value=sub.notes||"";
+  buildChips();updUI();
+  show("p-review");
+}
+
+async function viewDelivered(subId,address){
+  currentDeliveryAddr=address;
+  finalPhotos=[];
+  pages.forEach(function(p){document.getElementById(p).style.display="none";});
+  var pg=document.getElementById("p-delivery");
+  pg.style.display="flex";pg.style.flexDirection="column";
+  document.getElementById("delivery-addr").textContent=address;
+  document.getElementById("delivery-count").textContent="Loading...";
+  document.getElementById("delivery-grid").innerHTML="<div style='grid-column:1/-1;text-align:center;padding:32px;color:#a8a8a5;font-size:13px'>Loading photos...</div>";
+  window.scrollTo(0,0);
+  var cleanAddr=address.replace(/[^a-zA-Z0-9 ]/g,"").trim().replace(/\s+/g,"_");
+  var finalPath="/AutoHDR/"+cleanAddr+"/04-FINAL-Photos";
+  try{
+    var res=await fetch("https://api.dropboxapi.com/2/files/list_folder",{
+      method:"POST",
+      headers:{"Authorization":"Bearer "+DBX_TOKEN,"Content-Type":"application/json"},
+      body:JSON.stringify({path:finalPath,limit:100})
+    });
+    var data=await res.json();
+    var entries=(data.entries||[]).filter(function(e){return e.name.match(/\.(jpg|jpeg|png)$/i);});
+    document.getElementById("delivery-count").textContent=entries.length+" photos";
+    finalPhotos=entries;
+    if(!entries.length){
+      document.getElementById("delivery-grid").innerHTML="<div style='grid-column:1/-1;text-align:center;padding:32px;color:#a8a8a5;font-size:13px'>No final photos found yet.</div>";
+      return;
+    }
+    var grid=document.getElementById("delivery-grid");grid.innerHTML="";
+    for(var i=0;i<entries.length;i++){
+      var entry=entries[i];
+      var linkRes=await fetch("https://api.dropboxapi.com/2/files/get_temporary_link",{
+        method:"POST",
+        headers:{"Authorization":"Bearer "+DBX_TOKEN,"Content-Type":"application/json"},
+        body:JSON.stringify({path:entry.path_lower})
+      });
+      var linkData=await linkRes.json();
+      var url=linkData.link;
+      entries[i].url=url;
+      var cell=document.createElement("div");
+      cell.style.cssText="position:relative;border-radius:8px;overflow:hidden;background:#e5e5e3;aspect-ratio:4/3;cursor:pointer";
+      var img=document.createElement("img");
+      img.src=url;img.style.cssText="width:100%;height:100%;object-fit:cover;display:block";
+      var name=document.createElement("div");
+      name.style.cssText="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.7));padding:4px 6px;font-size:9px;color:#fff;font-weight:600";
+      name.textContent=entry.name.replace(/\.(jpg|jpeg|png)$/i,"").replace(/_/g," ");
+      var dlBtn=document.createElement("a");
+      dlBtn.href=url;dlBtn.download=entry.name;
+      dlBtn.style.cssText="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;border-radius:4px;padding:4px 8px;font-size:9px;font-weight:700;text-decoration:none;letter-spacing:.05em;text-transform:uppercase";
+      dlBtn.textContent="↓";
+      cell.appendChild(img);cell.appendChild(name);cell.appendChild(dlBtn);
+      grid.appendChild(cell);
+    }
+  }catch(e){
+    console.error("Delivery error:",e);
+    document.getElementById("delivery-grid").innerHTML="<div style='grid-column:1/-1;text-align:center;padding:32px;color:#a8a8a5;font-size:13px'>Could not load photos. Please try again.</div>";
+  }
+}
+
+async function downloadAllFinals(){
+  if(!finalPhotos.length){alert("No photos to download.");return;}
+  for(var i=0;i<finalPhotos.length;i++){
+    if(finalPhotos[i].url){
+      var a=document.createElement("a");a.href=finalPhotos[i].url;a.download=finalPhotos[i].name;a.click();
+      await new Promise(function(r){setTimeout(r,500);});
+    }
+  }
 }
 
 function reset(){photos=[];cur=0;zoomLevel=0.5;expLevel=0;updUI();loadDash();}
@@ -741,6 +944,7 @@ window.onload=async function(){
     <div style="font-size:11px;color:#7c7e7b;margin-bottom:14px">Tap photo to zoom &middot; tap x to delete</div>
     <div id="pgrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
     <button class="btn-r" onclick="doSubmit()">Submit to Studio12 &rarr;</button>
+    <button class="btn-out" onclick="saveDraft()">Save as Draft</button>
     <button class="btn-out" onclick="show('p-cam')">&larr; Add More Photos</button>
   </div>
 </div>
@@ -766,7 +970,7 @@ window.onload=async function(){
     <div style="font-size:13px;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:22px">Your photos are on their way. We will notify you when your edited images are ready.</div>
     <div style="margin-bottom:26px;text-align:left">
       <div id="submit-status" style="font-size:13px;color:#A32135;font-weight:700;text-align:center;padding:12px;background:rgba(163,33,53,.1);border-radius:6px;margin-bottom:12px">Uploading photos...</div><div class="step"><div class="dot on"></div><div class="stxt"><strong>Uploaded to S12</strong>Photos received by Studio12</div></div>
-      <div class="step"><div class="dot on"></div><div class="stxt"><strong>Editing Queued</strong>Processing started</div></div>
+      <div class="step"><div class="dot off"></div><div class="stxt"><strong>Editing Queued</strong>Your editor will be notified</div></div>
       <div class="step"><div class="dot off"></div><div class="stxt"><strong>S12 Review</strong>Quality check by our team</div></div>
       <div class="step"><div class="dot off"></div><div class="stxt"><strong>Delivered to You</strong>Next-morning via dashboard</div></div>
     </div>
@@ -793,7 +997,7 @@ var rooms=[
   {n:"Backyard",t:"Show depth from corner",c:"#2a3838"}
 ];
 
-var pages=["p-auth","p-dash","p-setup","p-cam","p-review","p-done"];
+var pages=["p-auth","p-dash","p-setup","p-cam","p-review","p-done","p-delivery"];
 var cur=0,photos=[],stream=null,lbIdx=0;
 var orientLandscape=true,zoomLevel=0.5,expLevel=0;
 
@@ -861,9 +1065,10 @@ async function doSignOut(){
 
 async function loadDash(){
   var prof=await supa.from("profiles").select("*").eq("id",currentUser.id).single();
-  var name=prof.data?prof.data.full_name.split(" ")[0]:"Agent";
-  document.getElementById("dash-name").textContent="Good morning, "+name;
-  document.getElementById("dash-initial").textContent=name.charAt(0).toUpperCase();
+  var fullName=prof.data?prof.data.full_name:"Agent";
+  var firstName=fullName.split(" ")[0];
+  document.getElementById("dash-name").textContent="Hello, "+fullName+"!";
+  document.getElementById("dash-initial").textContent=firstName.charAt(0).toUpperCase();
   var subs=await supa.from("submissions").select("*").eq("agent_id",currentUser.id).order("created_at",{ascending:false});
   renderSubmissions(subs.data||[]);
   show("p-dash");
@@ -1113,11 +1318,22 @@ function renderReview(){
     var del=document.createElement("button");
     del.style.cssText="position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;background:rgba(163,33,53,.9);color:#fff;border:none;cursor:pointer;font-size:14px;font-weight:700;line-height:26px;text-align:center;z-index:3;touch-action:manipulation";
     del.textContent="x";
+    var upg=document.createElement("button");
+    upg.className="upgrade-btn";
+    upg.textContent="+ Upgrade";
+    var upgBadge=null;
+    if(p.upgrade){
+      upgBadge=document.createElement("div");
+      upgBadge.className="upgrade-badge";
+      upgBadge.textContent=p.upgrade;
+    }
     (function(idx){
       del.onclick=function(e){e.stopPropagation();photos.splice(idx,1);renderReview();updUI();};
       cell.onclick=function(){openLb(idx);};
+      upg.onclick=function(e){e.stopPropagation();openUpgradeMenu(idx);};
     })(i);
-    cell.appendChild(num);cell.appendChild(rm);cell.appendChild(del);
+    cell.appendChild(num);cell.appendChild(rm);cell.appendChild(del);cell.appendChild(upg);
+    if(upgBadge)cell.appendChild(upgBadge);
     g.appendChild(cell);
   });
 }
@@ -1152,7 +1368,8 @@ async function uploadToDropbox(photos, address){
     var arr=new Uint8Array(bin.length);
     for(var j=0;j<bin.length;j++) arr[j]=bin.charCodeAt(j);
     var blob=new Blob([arr],{type:"image/jpeg"});
-    var filename=basePath+"/"+p.room.replace(/\s+/g,"_")+"_"+(i+1)+".jpg";
+    var upgradeSuffix=p.upgrade?"_"+p.upgrade.replace(/\s+/g,"_").toUpperCase():"";
+    var filename=basePath+"/"+p.room.replace(/\s+/g,"_")+"_"+(i+1)+upgradeSuffix+".jpg";
     try{
       var res=await fetch("https://content.dropboxapi.com/2/files/upload",{
         method:"POST",
