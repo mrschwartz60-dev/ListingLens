@@ -209,7 +209,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
     <div style="font-size:42px;font-weight:900;text-transform:uppercase;line-height:.93;color:#fff;margin-bottom:14px">Photos <b style="color:#A32135">Submitted!</b></div>
     <div style="font-size:13px;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:22px">Your photos are on their way. We will notify you when your edited images are ready.</div>
     <div style="margin-bottom:26px;text-align:left">
-      <div class="step"><div class="dot on"></div><div class="stxt"><strong>Uploaded to S12</strong>Photos received by Studio12</div></div>
+      <div id="submit-status" style="font-size:13px;color:#A32135;font-weight:700;text-align:center;padding:12px;background:rgba(163,33,53,.1);border-radius:6px;margin-bottom:12px">Uploading photos...</div><div class="step"><div class="dot on"></div><div class="stxt"><strong>Uploaded to S12</strong>Photos received by Studio12</div></div>
       <div class="step"><div class="dot on"></div><div class="stxt"><strong>Editing Queued</strong>Processing started</div></div>
       <div class="step"><div class="dot off"></div><div class="stxt"><strong>S12 Review</strong>Quality check by our team</div></div>
       <div class="step"><div class="dot off"></div><div class="stxt"><strong>Delivered to You</strong>Next-morning via dashboard</div></div>
@@ -313,10 +313,21 @@ async function saveSubmission(){
 
 async function doSubmit(){
   if(!photos.length){alert("Please take at least 1 photo first.");return;}
+  // Show uploading state
+  show("p-done");
+  document.getElementById("submit-status").textContent="Preparing upload...";
+  // Update Supabase count
   if(currentSubmissionId){
     await supa.from("submissions").update({photo_count:photos.length}).eq("id",currentSubmissionId);
   }
-  show("p-done");
+  // Upload to Dropbox
+  var addr=document.getElementById("paddr").value||"Unknown_Address";
+  var uploaded=await uploadToDropbox(photos, addr);
+  if(uploaded>0){
+    showSubmitStatus("✅ "+uploaded+" photos uploaded to Studio12!");
+  } else {
+    showSubmitStatus("⚠️ Upload failed — please contact Studio12.");
+  }
 }
 
 function show(id){
@@ -529,6 +540,50 @@ function showLb(){
   document.getElementById("lb-count").textContent=(lbIdx+1)+" / "+photos.length;
 }
 
+
+async function uploadToDropbox(photos, address){
+  var token = "sl.u.AGcyCPMvqs_RD2g3M_lVVCvxYAeM5JrOqDkJbplE0b3rLuxJ9llTcMaXrMdXd5ZOIAurogMW4Kt3Uuiwi5uuhjn-lQk8NyyYzfs_wNrkj4qj4QErM4p3j5DdBA4zQKZqsJYpWsQzG7gr2WYV12opGK6fVQCJkJH6M7_Rgx-KpeWp6RpGJMxRLSfgUjGg0lWOomJgiZvQurp4OUgi8Cl9xQVhJ7MsUfL_faVABPGVvmBFQZyEpTrfMqY94yiDnmrOIHhp8mk5GH-b9jrc-83lMOUzhX7YYJsxknKc8ZHoc8tSrhiFxhRf1KXd2Rs9SpZWoHQ-nSyH5NxrUYmdXqZbfkhtXDK0av1w3mOPe0F7E-gInirrreU8arWplWuIaU6aHeAueGpsn_GG4kEa2B8BCkWl9EM3l83Hrzsd4r4AXyNOhI_Z_qT3xPWXrXTSeY2myt42m8xg9IZRXDz0sBz8v4Z2myLHJ2vhjQ0BqT1H9x7fjNGjDYVBAYAaTrRHK5zltfMXEv1hEOuVkGzwQ37JRS6Qa-syBkMvtRchDCIupRv1dnJL4jc_NL-X1la1E3OgQ9QEq3JB_zJ9YJyoC4zNlqzH2A3Jog0Bf3tv712FMEeY6BdifonXoGAQUaWWCV8Uc38FTE-CiEr_Zh-cpp3kSgWV2lGPlwNHBXPdmNs8mnzBBFQ5OPnoTazGOilVd_oPKqlWAWCBZoM77fkNzgBRMEuG7wve8W89iiVVdhRwitxrCAtHDIhXg6F8b5byCJAG828oLxyJWq5WPSpPQDo1fh6sE8m0SVyWnYSlxBZxm-hj4OcPJgrwRArFz86GlGhHztzy0joyKDiVD-T-jMhlunNL23_0j8t3vgTVf9sDH3RolrGbq9CRnweFpO9zNCxMcqrhdG_TjVv2vpZxtYoMvjoH4Toa61P8mAU__VTVMV1XvswoXh4W2UNQnrFGIvUSCQvFBsYEbuaN6l1jEZjaLVi6QbZ2wMRfsVnHRWtSFYDn57IX5xWFddPF0mzxRXqpA-_ymEhFg2dOnvQ1xp8ZBtNdjOaoloa4ABq6_OaJB0A2qCWdAxRSIVcybZnVETsOljtqYpfS2ARTs-7fyhjlAllX-bu_U3A-Day_Sd5lN-tn7oPcQYCwQ1XUF1dlvB1_zMb38zG9Irt6CPGl4sQQxQ1_aTUP2rZj0pHak5cGoYVxdlNgA7g8cctDUVCqWykGBKEoa1rTDo5rYBTUysHsf_youmLihKf2A9OdtwX1PjPQHV3r8dvjwASlrNapC19rJ8Me6CKrVqV9gQl5ZMHnZmXdcQjpEhJUmDO_KykEPCW8zvU_NKQGojpg2nCGQZUYP1Btj7K60a0cEkgcLIcr_s122-HIowuE7MAbMEy9uwPl2OuwAFh2outCYasLJ6Msop27HctTGFppCaQnoRSlwJE438fyFzJfOAJnGQ37plX0mA";
+  var cleanAddr=address.replace(/[^a-zA-Z0-9 ]/g,"").trim().replace(/\s+/g,"_");
+  var basePath="/AutoHDR/"+cleanAddr+"/01-RAW-Photos";
+  var total=photos.filter(function(p){return p.du;}).length;
+  var done=0;
+  showSubmitStatus("Uploading 0 of "+total+"...");
+  for(var i=0;i<photos.length;i++){
+    var p=photos[i];
+    if(!p.du) continue;
+    // Convert base64 to binary
+    var b64=p.du.split(",")[1];
+    var bin=atob(b64);
+    var arr=new Uint8Array(bin.length);
+    for(var j=0;j<bin.length;j++) arr[j]=bin.charCodeAt(j);
+    var blob=new Blob([arr],{type:"image/jpeg"});
+    var filename=basePath+"/"+p.room.replace(/\s+/g,"_")+"_"+(i+1)+".jpg";
+    try{
+      var res=await fetch("https://content.dropboxapi.com/2/files/upload",{
+        method:"POST",
+        headers:{
+          "Authorization":"Bearer "+token,
+          "Dropbox-API-Arg":JSON.stringify({path:filename,mode:"overwrite",autorename:true}),
+          "Content-Type":"application/octet-stream"
+        },
+        body:blob
+      });
+      if(res.ok){
+        done++;
+        showSubmitStatus("Uploading "+done+" of "+total+"...");
+      }
+    }catch(e){
+      console.error("Upload error:",e);
+    }
+  }
+  return done;
+}
+
+function showSubmitStatus(msg){
+  var el=document.getElementById("submit-status");
+  if(el) el.textContent=msg;
+}
+
 function reset(){photos=[];cur=0;zoomLevel=0.5;expLevel=0;updUI();loadDash();}
 
 window.onload=async function(){
@@ -710,7 +765,7 @@ window.onload=async function(){
     <div style="font-size:42px;font-weight:900;text-transform:uppercase;line-height:.93;color:#fff;margin-bottom:14px">Photos <b style="color:#A32135">Submitted!</b></div>
     <div style="font-size:13px;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:22px">Your photos are on their way. We will notify you when your edited images are ready.</div>
     <div style="margin-bottom:26px;text-align:left">
-      <div class="step"><div class="dot on"></div><div class="stxt"><strong>Uploaded to S12</strong>Photos received by Studio12</div></div>
+      <div id="submit-status" style="font-size:13px;color:#A32135;font-weight:700;text-align:center;padding:12px;background:rgba(163,33,53,.1);border-radius:6px;margin-bottom:12px">Uploading photos...</div><div class="step"><div class="dot on"></div><div class="stxt"><strong>Uploaded to S12</strong>Photos received by Studio12</div></div>
       <div class="step"><div class="dot on"></div><div class="stxt"><strong>Editing Queued</strong>Processing started</div></div>
       <div class="step"><div class="dot off"></div><div class="stxt"><strong>S12 Review</strong>Quality check by our team</div></div>
       <div class="step"><div class="dot off"></div><div class="stxt"><strong>Delivered to You</strong>Next-morning via dashboard</div></div>
@@ -841,10 +896,21 @@ async function saveSubmission(){
 
 async function doSubmit(){
   if(!photos.length){alert("Please take at least 1 photo first.");return;}
+  // Show uploading state
+  show("p-done");
+  document.getElementById("submit-status").textContent="Preparing upload...";
+  // Update Supabase count
   if(currentSubmissionId){
     await supa.from("submissions").update({photo_count:photos.length}).eq("id",currentSubmissionId);
   }
-  show("p-done");
+  // Upload to Dropbox
+  var addr=document.getElementById("paddr").value||"Unknown_Address";
+  var uploaded=await uploadToDropbox(photos, addr);
+  if(uploaded>0){
+    showSubmitStatus("✅ "+uploaded+" photos uploaded to Studio12!");
+  } else {
+    showSubmitStatus("⚠️ Upload failed — please contact Studio12.");
+  }
 }
 
 // NAVIGATION
@@ -1067,6 +1133,50 @@ function showLb(){
   else{img.style.display="none";bg.style.display="flex";bg.style.background=p.c;}
   document.getElementById("lb-room").textContent=p.room;
   document.getElementById("lb-count").textContent=(lbIdx+1)+" / "+photos.length;
+}
+
+
+async function uploadToDropbox(photos, address){
+  var token = "sl.u.AGcyCPMvqs_RD2g3M_lVVCvxYAeM5JrOqDkJbplE0b3rLuxJ9llTcMaXrMdXd5ZOIAurogMW4Kt3Uuiwi5uuhjn-lQk8NyyYzfs_wNrkj4qj4QErM4p3j5DdBA4zQKZqsJYpWsQzG7gr2WYV12opGK6fVQCJkJH6M7_Rgx-KpeWp6RpGJMxRLSfgUjGg0lWOomJgiZvQurp4OUgi8Cl9xQVhJ7MsUfL_faVABPGVvmBFQZyEpTrfMqY94yiDnmrOIHhp8mk5GH-b9jrc-83lMOUzhX7YYJsxknKc8ZHoc8tSrhiFxhRf1KXd2Rs9SpZWoHQ-nSyH5NxrUYmdXqZbfkhtXDK0av1w3mOPe0F7E-gInirrreU8arWplWuIaU6aHeAueGpsn_GG4kEa2B8BCkWl9EM3l83Hrzsd4r4AXyNOhI_Z_qT3xPWXrXTSeY2myt42m8xg9IZRXDz0sBz8v4Z2myLHJ2vhjQ0BqT1H9x7fjNGjDYVBAYAaTrRHK5zltfMXEv1hEOuVkGzwQ37JRS6Qa-syBkMvtRchDCIupRv1dnJL4jc_NL-X1la1E3OgQ9QEq3JB_zJ9YJyoC4zNlqzH2A3Jog0Bf3tv712FMEeY6BdifonXoGAQUaWWCV8Uc38FTE-CiEr_Zh-cpp3kSgWV2lGPlwNHBXPdmNs8mnzBBFQ5OPnoTazGOilVd_oPKqlWAWCBZoM77fkNzgBRMEuG7wve8W89iiVVdhRwitxrCAtHDIhXg6F8b5byCJAG828oLxyJWq5WPSpPQDo1fh6sE8m0SVyWnYSlxBZxm-hj4OcPJgrwRArFz86GlGhHztzy0joyKDiVD-T-jMhlunNL23_0j8t3vgTVf9sDH3RolrGbq9CRnweFpO9zNCxMcqrhdG_TjVv2vpZxtYoMvjoH4Toa61P8mAU__VTVMV1XvswoXh4W2UNQnrFGIvUSCQvFBsYEbuaN6l1jEZjaLVi6QbZ2wMRfsVnHRWtSFYDn57IX5xWFddPF0mzxRXqpA-_ymEhFg2dOnvQ1xp8ZBtNdjOaoloa4ABq6_OaJB0A2qCWdAxRSIVcybZnVETsOljtqYpfS2ARTs-7fyhjlAllX-bu_U3A-Day_Sd5lN-tn7oPcQYCwQ1XUF1dlvB1_zMb38zG9Irt6CPGl4sQQxQ1_aTUP2rZj0pHak5cGoYVxdlNgA7g8cctDUVCqWykGBKEoa1rTDo5rYBTUysHsf_youmLihKf2A9OdtwX1PjPQHV3r8dvjwASlrNapC19rJ8Me6CKrVqV9gQl5ZMHnZmXdcQjpEhJUmDO_KykEPCW8zvU_NKQGojpg2nCGQZUYP1Btj7K60a0cEkgcLIcr_s122-HIowuE7MAbMEy9uwPl2OuwAFh2outCYasLJ6Msop27HctTGFppCaQnoRSlwJE438fyFzJfOAJnGQ37plX0mA";
+  var cleanAddr=address.replace(/[^a-zA-Z0-9 ]/g,"").trim().replace(/\s+/g,"_");
+  var basePath="/AutoHDR/"+cleanAddr+"/01-RAW-Photos";
+  var total=photos.filter(function(p){return p.du;}).length;
+  var done=0;
+  showSubmitStatus("Uploading 0 of "+total+"...");
+  for(var i=0;i<photos.length;i++){
+    var p=photos[i];
+    if(!p.du) continue;
+    // Convert base64 to binary
+    var b64=p.du.split(",")[1];
+    var bin=atob(b64);
+    var arr=new Uint8Array(bin.length);
+    for(var j=0;j<bin.length;j++) arr[j]=bin.charCodeAt(j);
+    var blob=new Blob([arr],{type:"image/jpeg"});
+    var filename=basePath+"/"+p.room.replace(/\s+/g,"_")+"_"+(i+1)+".jpg";
+    try{
+      var res=await fetch("https://content.dropboxapi.com/2/files/upload",{
+        method:"POST",
+        headers:{
+          "Authorization":"Bearer "+token,
+          "Dropbox-API-Arg":JSON.stringify({path:filename,mode:"overwrite",autorename:true}),
+          "Content-Type":"application/octet-stream"
+        },
+        body:blob
+      });
+      if(res.ok){
+        done++;
+        showSubmitStatus("Uploading "+done+" of "+total+"...");
+      }
+    }catch(e){
+      console.error("Upload error:",e);
+    }
+  }
+  return done;
+}
+
+function showSubmitStatus(msg){
+  var el=document.getElementById("submit-status");
+  if(el) el.textContent=msg;
 }
 
 function reset(){photos=[];cur=0;updUI();loadDash();}
