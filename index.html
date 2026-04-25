@@ -87,7 +87,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
   </div>
 </div>
 
-<div id="p-dash" style="display:none;flex-direction:column;background:#f2f2f1;min-height:100vh">
+<div id="p-dash" style="display:none" style="display:none;flex-direction:column;background:#f2f2f1;min-height:100vh">
   <div class="bar">
     <div><div class="logo">Listing<b>Lens</b></div><div style="font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.15em">BY STUDIO12</div></div>
     <div class="sp"></div>
@@ -110,7 +110,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
   </div>
 </div>
 
-<div id="p-setup" style="display:none;flex-direction:column;background:#f2f2f1;min-height:100vh">
+<div id="p-setup" style="display:none" style="display:none;flex-direction:column;background:#f2f2f1;min-height:100vh">
   <div class="bar">
     <button class="btn-sm" onclick="show('p-dash')">&larr; Back</button>
     <div class="sp"></div>
@@ -136,7 +136,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
   </div>
 </div>
 
-<div id="p-cam" style="display:none;flex-direction:column;background:#000;position:fixed;inset:0;z-index:100;overflow:hidden">
+<div id="p-cam" style="display:none" style="display:none;flex-direction:column;background:#000;position:fixed;inset:0;z-index:100;overflow:hidden">
   <video id="camvid" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;z-index:1"></video>
   <div id="camph" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,.4);text-align:center;padding:24px;z-index:2">
     <div style="font-size:48px;margin-bottom:12px">&#128247;</div>
@@ -184,7 +184,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
   </div>
 </div>
 
-<div id="p-review" style="display:none;flex-direction:column;background:#f2f2f1;min-height:100vh">
+<div id="p-review" style="display:none" style="display:none;flex-direction:column;background:#f2f2f1;min-height:100vh">
   <div class="bar">
     <button class="btn-sm" onclick="show('p-cam')">&larr; Camera</button>
     <div class="sp" style="text-align:center;font-size:14px;font-weight:900;text-transform:uppercase;color:#fff">Review</div>
@@ -200,7 +200,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
   </div>
 </div>
 
-<div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:200;flex-direction:column;align-items:center;justify-content:center">
+<div id="lightbox" style="display:none" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:200;flex-direction:column;align-items:center;justify-content:center">
   <div style="position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:linear-gradient(rgba(0,0,0,.7),transparent)">
     <div id="lb-room" style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff">Room</div>
     <button onclick="closeLb()" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:18px;width:36px;height:36px;border-radius:50%;cursor:pointer;touch-action:manipulation">X</button>
@@ -214,7 +214,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
   </div>
 </div>
 
-<div id="p-done" style="display:none;flex-direction:column;background:#111312;min-height:100vh;align-items:center;justify-content:center;padding:40px 24px;text-align:center">
+<div id="p-done" style="display:none" style="display:none;flex-direction:column;background:#111312;min-height:100vh;align-items:center;justify-content:center;padding:40px 24px;text-align:center">
   <div style="width:100%;max-width:380px">
     <div style="font-size:52px;margin-bottom:16px">&#9989;</div>
     <div style="font-size:42px;font-weight:900;text-transform:uppercase;line-height:.93;color:#fff;margin-bottom:14px">Photos <b style="color:#A32135">Submitted!</b></div>
@@ -230,7 +230,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
 </div>
 
 <!-- DELIVERY PAGE -->
-<div id="p-delivery" style="display:none;flex-direction:column;background:#f2f2f1;min-height:100vh">
+<div id="p-delivery" style="display:none" style="display:none;flex-direction:column;background:#f2f2f1;min-height:100vh">
   <div class="bar">
     <button class="btn-sm" onclick="show('p-dash')">&larr; Back</button>
     <div class="sp" style="text-align:center;font-size:14px;font-weight:900;text-transform:uppercase;color:#fff">Final Photos</div>
@@ -247,7 +247,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
 </div>
 
 <!-- UPGRADE MENU -->
-<div id="upgrade-menu" class="upgrade-menu" style="display:none" onclick="closeUpgradeMenu(event)">
+<div id="upgrade-menu" style="display:none" class="upgrade-menu" style="display:none" onclick="closeUpgradeMenu(event)">
   <div class="upgrade-sheet" onclick="event.stopPropagation()">
     <div class="upgrade-title">Select Upgrade for Photo <span id="upgrade-photo-num"></span></div>
     <button class="upgrade-opt" id="uopt-none" onclick="selectUpgrade(null)">
