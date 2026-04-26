@@ -99,10 +99,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f1;
     <button class="btn-big" onclick="show('p-setup')">&#128247; Photograph New Listing</button>
   </div>
   <div style="padding:18px">
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px">
-      <div class="scard"><div class="snum" id="stat-sub">0</div><div style="font-size:10px;color:#7c7e7b;margin-top:3px">Submitted</div></div>
-      <div class="scard"><div class="snum" id="stat-ed">0</div><div style="font-size:10px;color:#7c7e7b;margin-top:3px">Editing</div></div>
-      <div class="scard"><div class="snum" id="stat-del">0</div><div style="font-size:10px;color:#7c7e7b;margin-top:3px">Delivered</div></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px">
+      <div class="scard"><div class="snum" id="stat-draft" style="color:#7c7e7b">0</div><div style="font-size:9px;color:#7c7e7b;margin-top:3px">Draft</div></div>
+      <div class="scard"><div class="snum" id="stat-sub">0</div><div style="font-size:9px;color:#7c7e7b;margin-top:3px">Submitted</div></div>
+      <div class="scard"><div class="snum" id="stat-ed">0</div><div style="font-size:9px;color:#7c7e7b;margin-top:3px">Editing</div></div>
+      <div class="scard"><div class="snum" id="stat-del">0</div><div style="font-size:9px;color:#7c7e7b;margin-top:3px">Delivered</div></div>
     </div>
     <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#A32135;margin-bottom:12px">&#9654; Recent Submissions</div>
     <div id="sub-list"></div>
@@ -362,14 +363,19 @@ async function loadDash(){
 
 function renderSubmissions(subs){
   var stats={Submitted:0,Editing:0,Delivered:0};
+  var draftCount=0;
   subs.forEach(function(s){
-    if(s.status==="Submitted"||s.status==="Draft")stats["Submitted"]++;
+    if(s.status==="Submitted")stats["Submitted"]++;
     else if(s.status==="Editing")stats["Editing"]++;
     else if(s.status==="Delivered")stats["Delivered"]++;
+    else if(s.status==="Draft")draftCount++;
   });
   document.getElementById("stat-sub").textContent=stats["Submitted"];
   document.getElementById("stat-ed").textContent=stats["Editing"];
   document.getElementById("stat-del").textContent=stats["Delivered"];
+  // Show draft count in header if any
+  var draftEl=document.getElementById("stat-draft");
+  if(draftEl)draftEl.textContent=draftCount;
   var list=document.getElementById("sub-list");list.innerHTML="";
   if(!subs.length){list.innerHTML="<div style='font-size:13px;color:#7c7e7b;padding:16px 0'>No submissions yet. Tap Photograph New Listing to get started!</div>";return;}
   subs.slice(0,8).forEach(function(s){
@@ -713,7 +719,13 @@ async function loadDraft(subId){
   document.getElementById("paddr").value=sub.address||"";
   document.getElementById("ptype").value=sub.property_type||"Single Family Home";
   document.getElementById("pnotes").value=sub.notes||"";
-  buildChips();updUI();show("p-review");
+  buildChips();updUI();
+  // If no photos yet go to setup, otherwise go to review
+  if(!photos.length){
+    show("p-setup");
+  } else {
+    show("p-review");
+  }
 }
 
 async function viewDelivered(subId,address){
