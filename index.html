@@ -377,8 +377,32 @@ function renderSubmissions(subs){
     var ds=(d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear();
     var bc=s.status==="Editing"?"b-edit":s.status==="Delivered"?"b-del":s.status==="Draft"?"b-draft":"b-sub";
     var clickAction=s.status==="Draft"?"loadDraft('"+s.id+"')":s.status==="Delivered"?"viewDelivered('"+s.id+"','"+s.address.replace(/'/g,"")+"')":s.status==="Editing"||s.status==="Submitted"?"viewInProgress('"+s.id+"','"+s.address.replace(/'/g,"")+"','"+s.status+"')":"";
-    var cursor=clickAction?"cursor:pointer":"";
-    list.innerHTML+="<div class='lcard' style='"+cursor+"' onclick=\""+clickAction+"\"><div style='width:44px;height:36px;border-radius:4px;background:#e5e5e3;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0'>&#127969;</div><div style='flex:1;min-width:0'><div style='font-size:15px;font-weight:900;text-transform:uppercase;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>"+s.address+"</div><div style='font-size:11px;color:#7c7e7b;margin-top:2px'>"+s.property_type+" &middot; "+s.photo_count+" photos &middot; "+ds+"</div></div><span class='badge "+bc+"'>"+s.status+"</span></div>";
+    var wrap=document.createElement("div");
+    wrap.style.cssText="position:relative;overflow:hidden;border-radius:7px;margin-bottom:9px";
+    var delBg=document.createElement("div");
+    delBg.style.cssText="position:absolute;right:0;top:0;bottom:0;width:80px;background:#A32135;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:0 7px 7px 0";
+    delBg.innerHTML="<div style='color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase'>Delete</div>";
+    (function(sid){delBg.onclick=function(){deleteSubmission(sid);};})(s.id);
+    var inner=document.createElement("div");
+    inner.className="lcard";
+    inner.style.cssText="margin-bottom:0;position:relative;transition:transform 200ms;touch-action:pan-y;cursor:"+(clickAction?"pointer":"default");
+    if(clickAction)(function(ca){inner.onclick=function(){eval(ca);};})(clickAction);
+    inner.innerHTML="<div style='width:44px;height:36px;border-radius:4px;background:#e5e5e3;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0'>&#127969;</div><div style='flex:1;min-width:0'><div style='font-size:15px;font-weight:900;text-transform:uppercase;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>"+s.address+"</div><div style='font-size:11px;color:#7c7e7b;margin-top:2px'>"+s.property_type+" &middot; "+s.photo_count+" photos &middot; "+ds+"</div></div><span class='badge "+bc+"'>"+s.status+"</span>";
+    var startX=0;
+    inner.addEventListener("touchstart",function(e){startX=e.touches[0].clientX;},{passive:true});
+    inner.addEventListener("touchmove",function(e){
+      var dx=e.touches[0].clientX-startX;
+      if(dx<0)inner.style.transform="translateX("+Math.max(dx,-80)+"px)";
+      else inner.style.transform="translateX(0)";
+    },{passive:true});
+    inner.addEventListener("touchend",function(e){
+      var dx=e.changedTouches[0].clientX-startX;
+      if(dx<-40)inner.style.transform="translateX(-80px)";
+      else inner.style.transform="translateX(0)";
+    },{passive:true});
+    wrap.appendChild(delBg);
+    wrap.appendChild(inner);
+    list.appendChild(wrap);
   });
 }
 
@@ -387,7 +411,7 @@ async function saveSubmission(){
   var addr=document.getElementById("paddr").value||"Unknown Address";
   var type=document.getElementById("ptype").value;
   var notes=document.getElementById("pnotes").value;
-  var res=await supa.from("submissions").insert({agent_id:currentUser.id,address:addr,property_type:type,notes:notes,status:"Submitted",photo_count:0}).select().single();
+  var res=await supa.from("submissions").insert({agent_id:currentUser.id,address:addr,property_type:type,notes:notes,status:"Draft",photo_count:0}).select().single();
   if(res.data)currentSubmissionId=res.data.id;
 }
 
@@ -468,13 +492,10 @@ function startCam(){
 }
 
 async function exitCam(){
-  if(photos.length===0&&currentSubmissionId){
-    var delRes=await supa.from("submissions").delete().eq("id",currentSubmissionId);
-    console.log("Deleted empty submission:",currentSubmissionId,delRes);
-    currentSubmissionId=null;
-  } else if(photos.length===0){
-    // Also clean up any submissions created in last 2 mins with 0 photos for this agent
-    await supa.from("submissions").delete().eq("agent_id",currentUser.id).eq("photo_count",0).eq("status","Submitted");
+  // Keep the draft even if no photos taken - agent can return to it
+  if(currentSubmissionId&&photos.length===0){
+    // Update status to Draft so it shows correctly
+    await supa.from("submissions").update({status:"Draft",photo_count:0}).eq("id",currentSubmissionId);
   }
   photos=[];
   show("p-dash");
@@ -749,6 +770,12 @@ function viewInProgress(subId,address,status){
   document.getElementById("ip-icon").textContent=status==="Submitted"?"⏳":"✏️";
   document.getElementById("ip-eta").textContent=status==="Submitted"?"Editing typically begins within 15 minutes.":"Edited photos are usually delivered by next morning.";
   window.scrollTo(0,0);
+}
+
+async function deleteSubmission(id){
+  if(!confirm("Delete this listing?"))return;
+  await supa.from("submissions").delete().eq("id",id);
+  loadDash();
 }
 
 function reset(){photos=[];cur=0;zoomLevel=0.5;expLevel=0;updUI();loadDash();}
