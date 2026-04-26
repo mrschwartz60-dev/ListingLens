@@ -346,6 +346,7 @@ async function autoMoveToEditing(){
     .update({status:"Editing"})
     .eq("agent_id",currentUser.id)
     .eq("status","Submitted")
+    .eq("is_draft",false)
     .lt("created_at",cutoff);
 }
 
@@ -426,7 +427,11 @@ async function doSubmit(){
   show("p-done");
   document.getElementById("submit-status").textContent="Preparing upload...";
   if(currentSubmissionId){
-    await supa.from("submissions").update({photo_count:photos.length}).eq("id",currentSubmissionId);
+    await supa.from("submissions").update({
+      photo_count:photos.length,
+      status:"Submitted",
+      is_draft:false
+    }).eq("id",currentSubmissionId);
   }
   var addr=document.getElementById("paddr").value||"Unknown_Address";
   var uploaded=await uploadToDropbox(photos,addr);
