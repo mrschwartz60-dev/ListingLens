@@ -452,7 +452,13 @@ function show(id){
 }
 
 function startCam(){
+  // Always clear photos when starting a fresh listing
+  photos=[];
+  cur=0;
+  zoomLevel=0.5;
+  expLevel=0;
   currentSubmissionId=null;
+  updUI();
   buildChips();
   saveSubmission();
   pages.forEach(function(p){document.getElementById(p).style.display="none";});
