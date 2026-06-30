@@ -196,8 +196,8 @@ async function checkForFinals() {
     const { data: subs, error } = await supa
       .from('submissions')
       .select('*')
-      .neq('status', 'Delivered')
-      .neq('status', 'Draft');
+      .neq('status', 'Draft')
+      .neq('status', 'Editing');
 
     if (error) { console.error('Supabase error:', error); return; }
     if (!subs || !subs.length) { console.log('No active submissions to check.'); return; }
@@ -211,11 +211,23 @@ async function checkForFinals() {
           { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
         );
         if (res.data.entries && res.data.entries.length > 0) {
-          console.log('Finals found for:', sub.address);
-          await supa.from('submissions').update({
-            status: 'Delivered',
-            final_photo_count: res.data.entries.filter(e => e['.tag'] === 'file').length,
-          }).eq('id', sub.id);
+          const fileCount = res.data.entries.filter(e => e['.tag'] === 'file').length;
+          if (sub.status !== 'Delivered') {
+            // First delivery
+            console.log('Finals found for:', sub.address, '— marking Delivered');
+            await supa.from('submissions').update({
+              status: 'Delivered',
+              final_photo_count: fileCount,
+              upgrades_ready: false,
+            }).eq('id', sub.id);
+          } else if (sub.final_photo_count && fileCount > sub.final_photo_count && !sub.upgrades_ready) {
+            // More photos than before — upgrades have been added
+            console.log('Upgrades detected for:', sub.address, '— marking upgrades_ready');
+            await supa.from('submissions').update({
+              upgrades_ready: true,
+              final_photo_count: fileCount,
+            }).eq('id', sub.id);
+          }
         }
       } catch (e) {
         console.log('No finals yet for:', sub.address);
