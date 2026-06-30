@@ -68,9 +68,11 @@ async function sendSpecSheetEmail(sub) {
     const photoRows = photos.length > 0
       ? photos.map((p, i) => {
           const name = p.name.replace(/\.[^.]+$/, '');
-          const parts = name.split('_');
-          const hasUpgrade = parts.length > 2;
-          const upgrade = hasUpgrade ? parts.slice(2).join(' ') : 'Standard';
+          const dashParts = name.split('-');
+          // Format: 01-room_name or 01-room_name-UPGRADE_TYPE
+          const hasUpgrade = dashParts.length > 2;
+          const upgradeRaw = hasUpgrade ? dashParts.slice(2).join(' ').replace(/_/g, ' ') : '';
+          const upgrade = hasUpgrade ? upgradeRaw : 'Standard';
           return `
             <tr style="background:${i % 2 === 0 ? '#f9f9f9' : '#fff'}">
               <td style="padding:10px 14px;border-bottom:1px solid #eee;font-weight:700;color:#111;">${i + 1}</td>
