@@ -3,6 +3,8 @@ const cron = require('node-cron');
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
 const nodemailer = require('nodemailer');
+const apn = require('apn');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
@@ -17,14 +19,26 @@ const STUDIO12_EMAIL = "Photos@chattrboxstudios.com";
 const FROM_EMAIL     = "listinglenssubmission@gmail.com";
 const GMAIL_PASSWORD = "nupt kfet rxdb xluw";
 
+const APNs_KEY_ID  = "F5PSXYZAY9";
+const APNs_TEAM_ID = "84CTAPBPFF";
+const BUNDLE_ID    = "com.nicholasschwartz.listinglens";
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: { user: FROM_EMAIL, pass: GMAIL_PASSWORD },
 });
 
-const supa = createClient(SUPA_URL, SUPA_KEY);
+// APNs provider
+const apnProvider = new apn.Provider({
+  token: {
+    key: path.join(__dirname, 'AuthKey_F5PSXYZAY9.p8'),
+    keyId: APNs_KEY_ID,
+    teamId: APNs_TEAM_ID,
+  },
+  production: false, // Change to true when submitting to App Store
+});
 
-// Track which submissions we've already emailed to avoid duplicates
+const supa = createClient(SUPA_URL, SUPA_KEY);
 const emailedSubmissions = new Set();
 
 let cachedAccessToken = null;
@@ -46,6 +60,39 @@ async function getAccessToken() {
   return cachedAccessToken;
 }
 
+// ── Send push notification ────────────────────────────────────────────────────
+async function sendPushNotification(agentId, title, body) {
+  try {
+    const { data: profile } = await supa
+      .from('profiles')
+      .select('device_token')
+      .eq('id', agentId)
+      .single();
+
+    if (!profile?.device_token) {
+      console.log('No device token for agent:', agentId);
+      return;
+    }
+
+    const notification = new apn.Notification();
+    notification.expiry = Math.floor(Date.now() / 1000) + 3600;
+    notification.badge = 1;
+    notification.sound = 'default';
+    notification.alert = { title, body };
+    notification.topic = BUNDLE_ID;
+
+    const result = await apnProvider.send(notification, profile.device_token);
+    if (result.sent.length > 0) {
+      console.log('✅ Push sent to agent:', agentId);
+    } else {
+      console.log('❌ Push failed:', result.failed);
+    }
+  } catch (e) {
+    console.error('Push notification error:', e.message);
+  }
+}
+
+// ── Send spec sheet email ─────────────────────────────────────────────────────
 async function sendSpecSheetEmail(sub) {
   try {
     const token = await getAccessToken();
@@ -69,7 +116,6 @@ async function sendSpecSheetEmail(sub) {
       ? photos.map((p, i) => {
           const name = p.name.replace(/\.[^.]+$/, '');
           const dashParts = name.split('-');
-          // Format: 01-room_name or 01-room_name-UPGRADE_TYPE
           const hasUpgrade = dashParts.length > 2;
           const upgradeRaw = hasUpgrade ? dashParts.slice(2).join(' ').replace(/_/g, ' ') : '';
           const upgrade = hasUpgrade ? upgradeRaw : 'Standard';
@@ -90,91 +136,67 @@ async function sendSpecSheetEmail(sub) {
       dateStyle: 'medium', timeStyle: 'short'
     });
 
-    const html = `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f2f2f1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f2f2f1;padding:32px 16px;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-        <tr>
-          <td style="background:#111312;padding:24px 28px;">
-            <span style="font-size:22px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;">
-              Listing<span style="color:#A32135;">Lens</span>
-            </span>
-            <span style="display:block;font-size:10px;color:rgba(255,255,255,.4);letter-spacing:2px;margin-top:2px;">BY STUDIO12</span>
-          </td>
-        </tr>
+        <tr><td style="background:#111312;padding:24px 28px;">
+          <span style="font-size:22px;font-weight:900;color:#fff;text-transform:uppercase;">Listing<span style="color:#A32135;">Lens</span></span>
+          <span style="display:block;font-size:10px;color:rgba(255,255,255,.4);letter-spacing:2px;margin-top:2px;">BY STUDIO12</span>
+        </td></tr>
         <tr><td style="background:#A32135;height:3px;"></td></tr>
-        <tr>
-          <td style="padding:28px 28px 8px;">
-            <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#A32135;">New Submission</p>
-            <h1 style="margin:0;font-size:24px;font-weight:900;color:#111;text-transform:uppercase;">${sub.address}</h1>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:12px 28px 24px;">
-            <table cellpadding="0" cellspacing="0">
-              <tr>
-                <td style="padding-right:24px;">
-                  <p style="margin:0;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;">Property Type</p>
-                  <p style="margin:4px 0 0;font-size:14px;font-weight:600;color:#333;">${sub.property_type || 'Not specified'}</p>
-                </td>
-                <td style="padding-right:24px;">
-                  <p style="margin:0;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;">Photo Count</p>
-                  <p style="margin:4px 0 0;font-size:14px;font-weight:600;color:#333;">${sub.photo_count} photos</p>
-                </td>
-                <td>
-                  <p style="margin:0;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;">Submitted</p>
-                  <p style="margin:4px 0 0;font-size:14px;font-weight:600;color:#333;">${submittedAt}</p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-        ${sub.notes ? `
-        <tr>
-          <td style="padding:0 28px 24px;">
-            <div style="background:#f9f9f9;border-left:3px solid #A32135;border-radius:4px;padding:14px 16px;">
-              <p style="margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;">Agent Notes</p>
-              <p style="margin:0;font-size:14px;color:#333;">${sub.notes}</p>
-            </div>
-          </td>
-        </tr>` : ''}
-        <tr>
-          <td style="padding:0 28px 28px;">
-            <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#A32135;">Photo Spec Sheet</p>
-            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:8px;overflow:hidden;">
-              <thead>
-                <tr style="background:#111312;">
-                  <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.7);width:40px;">#</th>
-                  <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.7);">File Name</th>
-                  <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.7);">Edit Type</th>
-                </tr>
-              </thead>
-              <tbody>${photoRows}</tbody>
-            </table>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:0 28px 32px;">
-            <a href="https://www.dropbox.com/home/AutoHDR/${cleanAddr}"
-               style="display:inline-block;background:#A32135;color:#fff;text-decoration:none;padding:14px 24px;border-radius:8px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;">
-              View in Dropbox →
-            </a>
-          </td>
-        </tr>
-        <tr>
-          <td style="background:#f9f9f9;border-top:1px solid #eee;padding:16px 28px;">
-            <p style="margin:0;font-size:11px;color:#999;text-align:center;">ListingLens Studio by Studio12 · Automated Spec Sheet</p>
-          </td>
-        </tr>
+        <tr><td style="padding:28px 28px 8px;">
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#A32135;">New Submission</p>
+          <h1 style="margin:0;font-size:24px;font-weight:900;color:#111;text-transform:uppercase;">${sub.address}</h1>
+        </td></tr>
+        <tr><td style="padding:12px 28px 24px;">
+          <table cellpadding="0" cellspacing="0"><tr>
+            <td style="padding-right:24px;">
+              <p style="margin:0;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;">Property Type</p>
+              <p style="margin:4px 0 0;font-size:14px;font-weight:600;color:#333;">${sub.property_type || 'Not specified'}</p>
+            </td>
+            <td style="padding-right:24px;">
+              <p style="margin:0;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;">Photo Count</p>
+              <p style="margin:4px 0 0;font-size:14px;font-weight:600;color:#333;">${sub.photo_count} photos</p>
+            </td>
+            <td>
+              <p style="margin:0;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;">Submitted</p>
+              <p style="margin:4px 0 0;font-size:14px;font-weight:600;color:#333;">${submittedAt}</p>
+            </td>
+          </tr></table>
+        </td></tr>
+        ${sub.notes ? `<tr><td style="padding:0 28px 24px;">
+          <div style="background:#f9f9f9;border-left:3px solid #A32135;border-radius:4px;padding:14px 16px;">
+            <p style="margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;">Agent Notes</p>
+            <p style="margin:0;font-size:14px;color:#333;">${sub.notes}</p>
+          </div>
+        </td></tr>` : ''}
+        <tr><td style="padding:0 28px 28px;">
+          <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#A32135;">Photo Spec Sheet</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:8px;overflow:hidden;">
+            <thead><tr style="background:#111312;">
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.7);width:40px;">#</th>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.7);">File Name</th>
+              <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.7);">Edit Type</th>
+            </tr></thead>
+            <tbody>${photoRows}</tbody>
+          </table>
+        </td></tr>
+        <tr><td style="padding:0 28px 32px;">
+          <a href="https://www.dropbox.com/home/AutoHDR/${cleanAddr}"
+             style="display:inline-block;background:#A32135;color:#fff;text-decoration:none;padding:14px 24px;border-radius:8px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;">
+            View in Dropbox →
+          </a>
+        </td></tr>
+        <tr><td style="background:#f9f9f9;border-top:1px solid #eee;padding:16px 28px;">
+          <p style="margin:0;font-size:11px;color:#999;text-align:center;">ListingLens Studio by Studio12 · Automated Spec Sheet</p>
+        </td></tr>
       </table>
     </td></tr>
   </table>
-</body>
-</html>`;
+</body></html>`;
 
     await transporter.sendMail({
       from: `"ListingLens Studio" <${FROM_EMAIL}>`,
@@ -182,25 +204,24 @@ async function sendSpecSheetEmail(sub) {
       subject: `📋 New Submission: ${sub.address}`,
       html,
     });
-
     console.log('✅ Spec sheet email sent for:', sub.address);
   } catch (e) {
     console.error('❌ Failed to send spec sheet email:', e.message);
   }
 }
 
+// ── Check for finals ──────────────────────────────────────────────────────────
 async function checkForFinals() {
   console.log('[' + new Date().toISOString() + '] Checking Dropbox for finals...');
   try {
     const token = await getAccessToken();
-    const { data: subs, error } = await supa
+    const { data: subs } = await supa
       .from('submissions')
       .select('*')
       .neq('status', 'Draft')
       .neq('status', 'Editing');
 
-    if (error) { console.error('Supabase error:', error); return; }
-    if (!subs || !subs.length) { console.log('No active submissions to check.'); return; }
+    if (!subs || !subs.length) { console.log('No submissions to check.'); return; }
 
     for (const sub of subs) {
       const cleanAddr = sub.address.replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
@@ -213,20 +234,30 @@ async function checkForFinals() {
         if (res.data.entries && res.data.entries.length > 0) {
           const fileCount = res.data.entries.filter(e => e['.tag'] === 'file').length;
           if (sub.status !== 'Delivered') {
-            // First delivery
             console.log('Finals found for:', sub.address, '— marking Delivered');
             await supa.from('submissions').update({
               status: 'Delivered',
               final_photo_count: fileCount,
               upgrades_ready: false,
             }).eq('id', sub.id);
+            // Send push notification to agent
+            await sendPushNotification(
+              sub.agent_id,
+              '📸 Photos Ready!',
+              `Your edited photos for ${sub.address} are ready to download.`
+            );
           } else if (sub.final_photo_count && fileCount > sub.final_photo_count && !sub.upgrades_ready) {
-            // More photos than before — upgrades have been added
-            console.log('Upgrades detected for:', sub.address, '— marking upgrades_ready');
+            console.log('Upgrades detected for:', sub.address);
             await supa.from('submissions').update({
               upgrades_ready: true,
               final_photo_count: fileCount,
             }).eq('id', sub.id);
+            // Send push notification for upgrades
+            await sendPushNotification(
+              sub.agent_id,
+              '⭐ Upgrades Ready!',
+              `Your upgraded photos for ${sub.address} have been added.`
+            );
           }
         }
       } catch (e) {
@@ -238,7 +269,7 @@ async function checkForFinals() {
   }
 }
 
-// Check ALL submissions with status "Submitted" — no timestamp filter
+// ── Check for new submissions ─────────────────────────────────────────────────
 async function checkForNewSubmissions() {
   try {
     const { data: newSubs } = await supa
@@ -248,17 +279,14 @@ async function checkForNewSubmissions() {
 
     if (newSubs && newSubs.length > 0) {
       for (const sub of newSubs) {
-        if (emailedSubmissions.has(sub.id)) {
-          console.log('Already emailed:', sub.address, '— skipping');
-          continue;
-        }
+        if (emailedSubmissions.has(sub.id)) continue;
         console.log('New submission:', sub.address, '— sending spec sheet');
         await sendSpecSheetEmail(sub);
         emailedSubmissions.add(sub.id);
         await supa.from('submissions').update({ status: 'Editing' }).eq('id', sub.id);
       }
     } else {
-      console.log('No pending submissions to process.');
+      console.log('No pending submissions.');
     }
   } catch (e) {
     console.error('Error checking submissions:', e.message);
