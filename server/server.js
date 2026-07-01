@@ -31,7 +31,7 @@ const transporter = nodemailer.createTransport({
 // APNs provider
 const apnProvider = new apn.Provider({
   token: {
-    key: path.join(__dirname, 'AuthKey_F5PSXYZAY9.p8'),
+    key: path.join(__dirname, '..', 'AuthKey_F5PSXYZAY9.p8'),
     keyId: APNs_KEY_ID,
     teamId: APNs_TEAM_ID,
   },
