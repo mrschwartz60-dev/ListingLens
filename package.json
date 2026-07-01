@@ -2,6 +2,9 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
     "apn": "^2.2.0",
+    "axios": "^1.18.1",
+    "express": "^5.2.1",
+    "node-cron": "^4.5.0",
     "nodemailer": "^9.0.3"
   }
 }
