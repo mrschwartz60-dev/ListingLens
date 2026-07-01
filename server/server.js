@@ -94,7 +94,7 @@ async function sendPushNotification(agentId, title, body) {
 
     await new Promise((resolve, reject) => {
       const http2 = require('http2');
-      const client = http2.connect('https://api.push.apple.com');
+      const client = http2.connect('https://api.development.push.apple.com');
       
       const req = client.request({
         ':method': 'POST',
