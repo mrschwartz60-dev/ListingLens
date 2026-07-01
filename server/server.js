@@ -3,8 +3,9 @@ const cron = require('node-cron');
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
 const nodemailer = require('nodemailer');
-const apn = require('@parse/node-apn');
 const path = require('path');
+const jwt = require('jsonwebtoken');
+const fs = require('fs');
 
 const app = express();
 app.use(express.json());
@@ -74,21 +75,34 @@ async function sendPushNotification(agentId, title, body) {
       return;
     }
 
-    const notification = new apn.Notification();
-    notification.expiry = Math.floor(Date.now() / 1000) + 3600;
-    notification.badge = 1;
-    notification.sound = 'default';
-    notification.alert = { title, body };
-    notification.topic = BUNDLE_ID;
+    const token = generateAPNsToken();
+    const deviceToken = profile.device_token;
 
-    const result = await apnProvider.send(notification, profile.device_token);
-    if (result.sent.length > 0) {
-      console.log('✅ Push sent to agent:', agentId);
-    } else {
-      console.log('❌ Push failed:', result.failed);
-    }
+    const payload = JSON.stringify({
+      aps: {
+        alert: { title, body },
+        badge: 1,
+        sound: 'default',
+      }
+    });
+
+    const result = await axios.post(
+      `https://api.push.apple.com/3/device/${deviceToken}`,
+      payload,
+      {
+        headers: {
+          'authorization': `bearer ${token}`,
+          'apns-push-type': 'alert',
+          'apns-topic': BUNDLE_ID,
+          'apns-priority': '10',
+          'content-type': 'application/json',
+        },
+      }
+    );
+
+    console.log('✅ Push sent successfully to agent:', agentId);
   } catch (e) {
-    console.error('Push notification error:', e.message);
+    console.error('❌ Push failed:', e.response?.data || e.message);
   }
 }
 
