@@ -3,9 +3,9 @@ const cron = require('node-cron');
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
 const nodemailer = require('nodemailer');
-const path = require('path');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
@@ -29,22 +29,15 @@ const transporter = nodemailer.createTransport({
   auth: { user: FROM_EMAIL, pass: GMAIL_PASSWORD },
 });
 
-// APNs provider
-const apnProvider = new apn.Provider({
-  token: {
-    key: path.join(__dirname, '..', 'AuthKey_F5PSXYZAY9.p8'),
-    keyId: APNs_KEY_ID,
-    teamId: APNs_TEAM_ID,
-  },
-  production: false, // Change to true when submitting to App Store
-});
-
 const supa = createClient(SUPA_URL, SUPA_KEY);
 const emailedSubmissions = new Set();
 
 let cachedAccessToken = null;
 let tokenExpiry = 0;
+let apnsJwtToken = null;
+let apnsJwtExpiry = 0;
 
+// ── Dropbox token ─────────────────────────────────────────────────────────────
 async function getAccessToken() {
   if (cachedAccessToken && Date.now() < tokenExpiry) return cachedAccessToken;
   const response = await axios.post('https://api.dropbox.com/oauth2/token',
@@ -61,6 +54,19 @@ async function getAccessToken() {
   return cachedAccessToken;
 }
 
+// ── APNs JWT token ────────────────────────────────────────────────────────────
+function getAPNsToken() {
+  if (apnsJwtToken && Date.now() < apnsJwtExpiry) return apnsJwtToken;
+  const privateKey = fs.readFileSync(path.join(__dirname, '..', 'AuthKey_F5PSXYZAY9.p8'));
+  apnsJwtToken = jwt.sign(
+    { iss: APNs_TEAM_ID, iat: Math.floor(Date.now() / 1000) },
+    privateKey,
+    { algorithm: 'ES256', keyid: APNs_KEY_ID }
+  );
+  apnsJwtExpiry = Date.now() + 50 * 60 * 1000; // 50 minutes
+  return apnsJwtToken;
+}
+
 // ── Send push notification ────────────────────────────────────────────────────
 async function sendPushNotification(agentId, title, body) {
   try {
@@ -75,7 +81,7 @@ async function sendPushNotification(agentId, title, body) {
       return;
     }
 
-    const token = generateAPNsToken();
+    const token = getAPNsToken();
     const deviceToken = profile.device_token;
 
     const payload = JSON.stringify({
@@ -86,7 +92,7 @@ async function sendPushNotification(agentId, title, body) {
       }
     });
 
-    const result = await axios.post(
+    const res = await axios.post(
       `https://api.push.apple.com/3/device/${deviceToken}`,
       payload,
       {
@@ -97,10 +103,11 @@ async function sendPushNotification(agentId, title, body) {
           'apns-priority': '10',
           'content-type': 'application/json',
         },
+        httpsAgent: new (require('https').Agent)({ keepAlive: true }),
       }
     );
 
-    console.log('✅ Push sent successfully to agent:', agentId);
+    console.log('✅ Push sent successfully, status:', res.status);
   } catch (e) {
     console.error('❌ Push failed:', e.response?.data || e.message);
   }
@@ -254,7 +261,6 @@ async function checkForFinals() {
               final_photo_count: fileCount,
               upgrades_ready: false,
             }).eq('id', sub.id);
-            // Send push notification to agent
             await sendPushNotification(
               sub.agent_id,
               '📸 Photos Ready!',
@@ -266,7 +272,6 @@ async function checkForFinals() {
               upgrades_ready: true,
               final_photo_count: fileCount,
             }).eq('id', sub.id);
-            // Send push notification for upgrades
             await sendPushNotification(
               sub.agent_id,
               '⭐ Upgrades Ready!',
