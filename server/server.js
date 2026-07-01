@@ -92,22 +92,38 @@ async function sendPushNotification(agentId, title, body) {
       }
     });
 
-    const res = await axios.post(
-      `https://api.push.apple.com/3/device/${deviceToken}`,
-      payload,
-      {
-        headers: {
-          'authorization': `bearer ${token}`,
-          'apns-push-type': 'alert',
-          'apns-topic': BUNDLE_ID,
-          'apns-priority': '10',
-          'content-type': 'application/json',
-        },
-        httpsAgent: new (require('https').Agent)({ keepAlive: true }),
-      }
-    );
+    await new Promise((resolve, reject) => {
+      const http2 = require('http2');
+      const client = http2.connect('https://api.push.apple.com');
+      
+      const req = client.request({
+        ':method': 'POST',
+        ':path': `/3/device/${deviceToken}`,
+        'authorization': `bearer ${token}`,
+        'apns-push-type': 'alert',
+        'apns-topic': BUNDLE_ID,
+        'apns-priority': '10',
+        'content-type': 'application/json',
+        'content-length': Buffer.byteLength(payload),
+      });
 
-    console.log('✅ Push sent successfully, status:', res.status);
+      req.write(payload);
+      req.end();
+
+      let responseData = '';
+      req.on('data', chunk => { responseData += chunk; });
+      req.on('end', () => {
+        client.close();
+        const status = req.sentHeaders ? req.sentHeaders[':status'] : 'unknown';
+        console.log('✅ Push sent, status:', status, responseData || 'OK');
+        resolve();
+      });
+
+      req.on('error', (err) => {
+        client.close();
+        reject(err);
+      });
+    });
   } catch (e) {
     console.error('❌ Push failed:', e.response?.data || e.message);
   }
