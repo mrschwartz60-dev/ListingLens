@@ -3,7 +3,7 @@ const cron = require('node-cron');
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
 const nodemailer = require('nodemailer');
-const apn = require('apn');
+const apn = require('@parse/node-apn');
 const path = require('path');
 
 const app = express();
