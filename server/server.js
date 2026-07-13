@@ -149,22 +149,32 @@ async function sendSpecSheetEmail(sub) {
       console.log('Could not list photos:', e.message);
     }
 
+    // Also fetch upgrade info from Supabase submission
+    let photoUpgrades = {};
+    try {
+      const { data: subData } = await supa
+        .from('submissions')
+        .select('photo_upgrades')
+        .eq('id', sub.id)
+        .single();
+      if (subData?.photo_upgrades) {
+        photoUpgrades = subData.photo_upgrades;
+      }
+    } catch(e) {}
+
     const photoRows = photos.length > 0
       ? photos.map((p, i) => {
           const name = p.name.replace(/\.[^.]+$/, '');
-          const dashParts = name.split('-');
-          const hasUpgrade = dashParts.length > 2;
-          const upgradeRaw = hasUpgrade ? dashParts.slice(2).join(' ').replace(/_/g, ' ') : '';
-          const upgrade = hasUpgrade ? upgradeRaw : 'Standard';
+          const upgrades = photoUpgrades[i] || [];
+          const hasUpgrade = upgrades.length > 0;
+          const upgradeDisplay = hasUpgrade
+            ? upgrades.map(u => `<span style="display:inline-block;background:#A32135;color:#fff;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:700;text-transform:uppercase;margin:1px;">${u}</span>`).join(' ')
+            : '<span style="background:#e5e5e3;color:#555;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700;text-transform:uppercase;">Standard</span>';
           return `
             <tr style="background:${i % 2 === 0 ? '#f9f9f9' : '#fff'}">
               <td style="padding:10px 14px;border-bottom:1px solid #eee;font-weight:700;color:#111;">${i + 1}</td>
               <td style="padding:10px 14px;border-bottom:1px solid #eee;color:#333;">${name}</td>
-              <td style="padding:10px 14px;border-bottom:1px solid #eee;">
-                <span style="background:${hasUpgrade ? '#A32135' : '#e5e5e3'};color:${hasUpgrade ? '#fff' : '#555'};padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700;text-transform:uppercase;">
-                  ${upgrade}
-                </span>
-              </td>
+              <td style="padding:10px 14px;border-bottom:1px solid #eee;">${upgradeDisplay}</td>
             </tr>`;
         }).join('')
       : `<tr><td colspan="3" style="padding:20px;text-align:center;color:#999;">Check Dropbox directly for photos.</td></tr>`;
